@@ -309,8 +309,10 @@ void surfaces_dealloc(void* pointer)
 
     for (int index = 0; index < surfaces->size; index++) REL(surfaces->strips[index]);
 
-    REL(surfaces->strips);
-    REL(surfaces->groups);
+    if (surfaces->strips)
+	REL(surfaces->strips);
+    if (surfaces->groups)
+	REL(surfaces->groups);
 }
 
 /* reset surfaces */

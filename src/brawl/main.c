@@ -148,7 +148,6 @@ void main_onmessage(const char* name, void* data)
 
 void main_init(void)
 {
-
     srand((unsigned int) time(NULL));
 
     /* paths first */

@@ -58,8 +58,10 @@ void element_dealloc(void* pointer)
     REL(element->type);
     REL(element->name);
 
-    REL(element->data);
-    REL(element->bitmap);
+    if (element->data)
+	REL(element->data);
+    if (element->bitmap)
+	REL(element->bitmap);
     REL(element->actions);
 
     for (int index = 0; index < element->subelements->length; index++) element_removesubelement(element, element->subelements->data[index]);

@@ -179,9 +179,10 @@ void scene_init()
 
 void scene_free(void)
 {
-
-    REL(scene.herogroup);
-    REL(scene.enemygroup);
+    if (scene.herogroup)
+	REL(scene.herogroup);
+    if (scene.enemygroup)
+	REL(scene.enemygroup);
 
     scenerenderer_free();
 
