@@ -52,14 +52,10 @@ void cellrenderer_timerloop(cellrenderer_t* renderer)
 	}
 	else
 	{
-#ifdef RASPBERRY
-	    usleep(100);
-#else
 	    struct timespec time;
 	    time.tv_sec  = 0;
 	    time.tv_nsec = 100000000L;
 	    nanosleep(&time, (struct timespec*) NULL);
-#endif
 	}
     }
 

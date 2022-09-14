@@ -1134,8 +1134,8 @@ char scene_hit(attack_t* attack)
 void scene_kick(attack_t* attack)
 {
 
-    actor_t* actor   = attack->actor;
-    char     success = scene_hit(attack);
+    /* actor_t* actor   = attack->actor; */
+    char success = scene_hit(attack);
 
     if (success == 1)
     {

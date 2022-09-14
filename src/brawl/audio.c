@@ -1,4 +1,3 @@
-
 #ifndef _audio_header
 #define _audio_header
 
@@ -23,7 +22,6 @@ void audio_onmessage(const char* name, void* data);
 
 void audio_free()
 {
-
     Mix_FreeMusic(music);
 
     for (int index = 0;
@@ -36,7 +34,6 @@ void audio_free()
 
 void audio_init(char* path)
 {
-
     bus_subscribe("SND", audio_onmessage);
 
     char* msc = cstr_new_format(PATH_MAX, "%s/theme.wav", path, NULL);
@@ -78,7 +75,6 @@ void audio_init(char* path)
 
 void audio_onmessage(const char* name, void* data)
 {
-
     if (strcmp(name, "PLAYSND") == 0)
     {
 	char* type = data;

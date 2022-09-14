@@ -1,5 +1,3 @@
-
-
 #ifndef cellrenderer_h
 #define cellrenderer_h
 

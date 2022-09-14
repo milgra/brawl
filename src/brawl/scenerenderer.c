@@ -48,21 +48,12 @@ scenerenderer_t renderer;
 
 #include "zc_memory.c"
 
-#if defined(IOS) || defined(ASMJS) || defined(ANDROID)
 const char* gvertex_point_source =
-    #include "shaders/game_es.vsh"
+#include "shaders/game.vsh"
     ;
 const char* gfragment_point_source =
-    #include "shaders/game_es.fsh"
+#include "shaders/game.fsh"
     ;
-#else
-const char* gvertex_point_source =
-    #include "shaders/game.vsh"
-    ;
-const char* gfragment_point_source =
-    #include "shaders/game.fsh"
-    ;
-#endif
 
 void scenerenderer_onmessage(const char* name, void* data);
 

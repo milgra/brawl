@@ -79,10 +79,6 @@ void defaults_init(char* libpath, char* respath)
 	settings_setfloat("alpharatio", .5);
 
 	settings_setint("effects_level", 2);
-
-#ifdef RASPBERRY
-	settings_setint("effects_level", 0);
-#endif
     }
 
     defaults.donation_arrived = settings_getint("donation_arrived");
@@ -120,10 +116,6 @@ void defaults_reset()
     settings_setfloat("alpharatio", .5);
 
     settings_setint("effects_level", 2);
-
-#ifdef RASPBERRY
-    settings_setint("effects_level", 0);
-#endif
 }
 
 void defaults_save()
