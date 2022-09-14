@@ -80,7 +80,7 @@ void element_settype(element_t* element, char* type)
 void element_setdata(element_t* element, void* data)
 {
     if (element->data) REL(element->data);
-    element->data = RET(data);
+    if (data) element->data = RET(data);
 }
 
 /* set bitmap */
@@ -366,7 +366,8 @@ element_t* videoelement_alloc(
 {
     element_t* element = element_alloc("video", name, x, y, width, height, NULL);
 
-    element->data  = RET(path);
+    if (path)
+	element->data = RET(path);
     element->input = videoelement_input;
 
     element->texture.tiled             = 0;

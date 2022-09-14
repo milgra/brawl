@@ -84,25 +84,29 @@ void actor_group_destruct(void* pointer)
 void actor_group_setfainted(actor_group_t* group, void* fainted)
 {
     if (group->fainted) REL(group->fainted);
-    group->fainted = RET(fainted);
+    group->fainted = NULL;
+    if (fainted) group->fainted = RET(fainted);
 }
 
 void actor_group_setbubble(actor_group_t* group, void* bubble)
 {
     if (group->bubble) REL(group->bubble);
-    group->bubble = RET(bubble);
+    group->bubble = NULL;
+    if (bubble) group->bubble = RET(bubble);
 }
 
 void actor_group_setgun(actor_group_t* group, void* gun)
 {
     if (group->gun) REL(group->gun);
-    group->gun = RET(gun);
+    group->gun = NULL;
+    if (gun) group->gun = RET(gun);
 }
 
 void actor_group_sethud(actor_group_t* group, void* hud)
 {
     if (group->hud) REL(group->hud);
-    group->hud = RET(hud);
+    group->hud = NULL;
+    if (hud) group->hud = RET(hud);
 }
 
 #endif

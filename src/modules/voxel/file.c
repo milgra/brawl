@@ -351,7 +351,8 @@ type_container_t* mtfile_defaultcontainer(char type, void* data)
 {
     type_container_t* result = CAL(sizeof(type_container_t), mtfile_defaultcontainer_destruct, NULL);
     result->type             = type;
-    result->data             = RET(data);
+    if (data)
+	result->data = RET(data);
     return result;
 }
 

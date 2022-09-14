@@ -568,7 +568,6 @@ void scene_remove_actor(actor_t* actor)
 
 void scene_create_blood(attack_t* attack)
 {
-
     for (int index = 0; index < 4; index++)
     {
 
@@ -1070,7 +1069,6 @@ char scene_hit(attack_t* attack)
 		}
 
 		attack_t* bloodattack = attack_alloc(attack->actor, isp, v2_resize(attack->basis, 3.0), attack->power);
-
 		scene_create_blood(bloodattack);
 		REL(bloodattack);
 	    }

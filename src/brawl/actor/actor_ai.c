@@ -361,8 +361,8 @@ void actor_ai_releaselocked(actor_ai_t* ai)
 void actor_ai_set_enemy(actor_ai_t* ai, actor_group_t* enemy)
 {
     if (ai->locked_enemy) REL(ai->locked_enemy);
-    ai->locked_enemy = enemy;
-    RET(enemy);
+    ai->locked_enemy = NULL;
+    if (enemy) ai->locked_enemy = RET(enemy);
 }
 
 /* set boss */
@@ -370,8 +370,8 @@ void actor_ai_set_enemy(actor_ai_t* ai, actor_group_t* enemy)
 void actor_ai_set_boss(actor_ai_t* ai, actor_group_t* boss)
 {
     if (ai->locked_boss) REL(ai->locked_boss);
-    ai->locked_boss = boss;
-    RET(boss);
+    ai->locked_boss = NULL;
+    if (boss) ai->locked_boss = RET(boss);
 }
 
 /* adds point to debug point buffer */
