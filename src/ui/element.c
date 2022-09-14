@@ -2,7 +2,8 @@
 #define element_h
 
 #include "input.h"
-#include "mtbmp.c"
+#include "zc_bm_rgba.c"
+#include "zc_draw.c"
 #include "zc_map.c"
 #include "zc_util2.c"
 #include "zc_vector.c"
@@ -67,10 +68,10 @@ struct _element_t
     float finalx; /* absolute x position */
     float finaly; /* absolute y position */
 
-    mtbmp_t* bitmap;      /* element's bitmap that will be used in the opengl texture map */
-    map_t*   actions;     /* element actions */
-    vec_t*   subelements; /* subelements */
-    v2_t*    translation; /* translation, the address is used by the renderer to group elements for rendering */
+    bm_rgba_t* bitmap;      /* element's bitmap that will be used in the opengl texture map */
+    map_t*     actions;     /* element actions */
+    vec_t*     subelements; /* subelements */
+    v2_t*      translation; /* translation, the address is used by the renderer to group elements for rendering */
 
     element_texture_t   texture;   /* texture information */
     element_autosize_t  autosize;  /* autosize information */
@@ -79,13 +80,13 @@ struct _element_t
     void (*input)(element_t*, input_t*);
 };
 
-element_t* element_alloc(char* type, char* name, float x, float y, float width, float height, mtbmp_t* bitmap);
+element_t* element_alloc(char* type, char* name, float x, float y, float width, float height, bm_rgba_t* bitmap);
 
 void element_settype(element_t* element, char* type);
 
 void element_setdata(element_t* element, void* data);
 
-void element_setbitmap(element_t* element, mtbmp_t* bitmap);
+void element_setbitmap(element_t* element, bm_rgba_t* bitmap);
 
 void element_setaction(element_t* element, char* actionid, char* action);
 
@@ -156,7 +157,7 @@ void element_dealloc(void* pointer);
 
 /* alloc element */
 
-element_t* element_alloc(char* type, char* name, float x, float y, float width, float height, mtbmp_t* bitmap)
+element_t* element_alloc(char* type, char* name, float x, float y, float width, float height, bm_rgba_t* bitmap)
 {
     element_t* element = CAL(sizeof(element_t), element_dealloc, NULL);
 
@@ -231,7 +232,7 @@ void element_setdata(element_t* element, void* data)
 
 /* set bitmap */
 
-void element_setbitmap(element_t* element, mtbmp_t* bitmap)
+void element_setbitmap(element_t* element, bm_rgba_t* bitmap)
 {
     if (element->bitmap) REL(element->bitmap);
     element->bitmap                    = RET(bitmap);
@@ -439,8 +440,8 @@ element_t* solidelement_alloc(
     float    height,
     uint32_t color)
 {
-    mtbmp_t* bitmap = mtbmp_alloc(ceilf(width) + 1, ceilf(height) + 1);
-    mtbmp_fill_with_color(bitmap, 0, 0, bitmap->width, bitmap->height, color);
+    bm_rgba_t* bitmap = bm_rgba_new(ceilf(width) + 1, ceilf(height) + 1);
+    gfx_rect(bitmap, 0, 0, bitmap->w, bitmap->h, color, 0);
 
     element_t* element = element_alloc("solid", name, x, y, width, height, bitmap);
 
@@ -453,8 +454,8 @@ element_t* solidelement_alloc(
 
 void solidelement_setcolor(element_t* element, uint32_t color)
 {
-    mtbmp_t* bitmap = mtbmp_alloc(ceilf(element->width), ceilf(element->height));
-    mtbmp_fill_with_color(bitmap, 0, 0, bitmap->width, bitmap->height, color);
+    bm_rgba_t* bitmap = bm_rgba_new(ceilf(element->width), ceilf(element->height));
+    gfx_rect(bitmap, 0, 0, bitmap->w, bitmap->h, color, 0);
     element_setbitmap(element, bitmap);
     REL(bitmap);
 }
@@ -469,7 +470,7 @@ element_t* imageelement_alloc(
     float height,
     char* imagepath)
 {
-    mtbmp_t*   bitmap  = image_bmp_from_png(imagepath);
+    bm_rgba_t* bitmap  = image_bmp_from_png(imagepath);
     element_t* element = element_alloc("image", name, x, y, width, height, bitmap);
     REL(bitmap);
 
@@ -480,14 +481,14 @@ element_t* imageelement_alloc(
 
 void imageelement_resize(element_t* element, float width, float height)
 {
-    float imgratio = element->bitmap->width / element->bitmap->height;
+    float imgratio = element->bitmap->w / element->bitmap->h;
     float newratio = width / height;
 
     if (imgratio > newratio)
     {
 	/* fit into wanted width */
 	element->width  = width;
-	element->height = width * (element->bitmap->height / element->bitmap->width);
+	element->height = width * (element->bitmap->h / element->bitmap->w);
     }
     else
     {

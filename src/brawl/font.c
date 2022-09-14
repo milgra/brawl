@@ -2,9 +2,9 @@
 #ifndef font_h
 #define font_h
 
-#include "mtbmp.c"
 #include "stb_truetype.h"
 #include "text.c"
+#include "zc_bm_rgba.c"
 #include "zc_string.c"
 #include "zc_vector.c"
 #include <stdint.h>
@@ -19,9 +19,9 @@ struct _font_t
     int            descent;
 };
 
-font_t*  font_alloc(char* the_font_path);
-void     font_dealloc(void* the_font);
-mtbmp_t* font_render_text(
+font_t*    font_alloc(char* the_font_path);
+void       font_dealloc(void* the_font);
+bm_rgba_t* font_render_text(
     int             width,
     int             height,
     str_t*          string,
@@ -36,6 +36,7 @@ mtbmp_t* font_render_text(
 
 #include "floatbuffer.c"
 #include "zc_cstring.c"
+#include "zc_draw.c"
 #include "zc_memory.c"
 #include <math.h>
 #include <stdio.h>
@@ -99,7 +100,7 @@ void font_dealloc(void* pointer)
 
 /* render text TODO !!! CLEANUP, REFACTOR */
 
-mtbmp_t* font_render_text(int width, int height, str_t* string, font_t* the_font, textstyle_t text, glyphmetrics_t* glyphmetrics, vec_t* selections)
+bm_rgba_t* font_render_text(int width, int height, str_t* string, font_t* the_font, textstyle_t text, glyphmetrics_t* glyphmetrics, vec_t* selections)
 {
     /* get font metrics */
 
@@ -135,8 +136,8 @@ mtbmp_t* font_render_text(int width, int height, str_t* string, font_t* the_font
 
 	/* create empty bitmap */
 
-	mtbmp_t* result = mtbmp_alloc(dimensions.x, dimensions.y);
-	mtbmp_fill_with_color(result, 0, 0, result->width, result->height, text.backcolor);
+	bm_rgba_t* result = bm_rgba_new(dimensions.x, dimensions.y);
+	gfx_rect(result, 0, 0, result->w, result->h, text.backcolor, 0);
 
 	if (glyphmetrics == NULL) REL(metrics);
 	return result;
@@ -144,7 +145,7 @@ mtbmp_t* font_render_text(int width, int height, str_t* string, font_t* the_font
 
     /* bitmap array with maximum possible characters */
 
-    mtbmp_t* bitmaps[string->length];
+    bm_rgba_t* bitmaps[string->length];
 
     /* generate glyphs and get metrics */
 
@@ -201,15 +202,15 @@ mtbmp_t* font_render_text(int width, int height, str_t* string, font_t* the_font
 
 	/* generate and store final bitmap */
 
-	mtbmp_t* bitmap;
+	bm_rgba_t* bitmap;
 	if (gw > 0 && gh > 0)
 	{
-	    bitmap = mtbmp_alloc_from_grayscale(gw, gh, backcolor & 0xFFFFFF00, textcolor, rawmap);
+	    bitmap = gfx_bm_rgba_from_grayscale(gw, gh, backcolor & 0xFFFFFF00, textcolor, rawmap);
 	    free(rawmap);
 	}
 	else
 	{
-	    bitmap = mtbmp_alloc(1, 1);
+	    bitmap = bm_rgba_new(1, 1);
 	}
 
 	bitmaps[index] = bitmap;
@@ -225,9 +226,9 @@ mtbmp_t* font_render_text(int width, int height, str_t* string, font_t* the_font
 
     /* draw all glyphs, create the base bitmap first */
 
-    mtbmp_t* result = mtbmp_alloc(dimensions.x < width ? width : dimensions.x, dimensions.y < height ? height : dimensions.y);
+    bm_rgba_t* result = bm_rgba_new(dimensions.x < width ? width : dimensions.x, dimensions.y < height ? height : dimensions.y);
 
-    mtbmp_fill_with_color(result, 0, 0, result->width, result->height, text.backcolor);
+    gfx_rect(result, 0, 0, result->w, result->h, text.backcolor, 0);
 
     int xoff = 0;
     int yoff = 0;
@@ -246,7 +247,7 @@ mtbmp_t* font_render_text(int width, int height, str_t* string, font_t* the_font
 
     for (int index = 0; index < string->length; index++)
     {
-	mtbmp_t*        bitmap = bitmaps[index];
+	bm_rgba_t*      bitmap = bitmaps[index];
 	glyphmetrics_t* glyph  = &metrics[index + 1];
 
 	glyph->x += xoff;
@@ -259,10 +260,10 @@ mtbmp_t* font_render_text(int width, int height, str_t* string, font_t* the_font
 		prevx = glyph->x;
 		prevy = glyph->y;
 	    }
-	    mtbmp_fill_with_color(result, prevx, prevy - asc, glyph->x + glyph->width, glyph->y - desc, 0xBBBBBBFF);
+	    gfx_rect(result, prevx, prevy - asc, glyph->x + glyph->width, glyph->y - desc, 0xBBBBBBFF, 0);
 	}
 
-	if (bitmap->bytes != NULL) mtbmp_blend_from(result, bitmap, glyph->x, glyph->y + glyph->yoff);
+	if (bitmap->data != NULL) gfx_blend_bitmap(result, bitmap, glyph->x, glyph->y + glyph->yoff);
 
 	prevx = glyph->x + glyph->width;
 	prevy = glyph->y;

@@ -305,13 +305,13 @@ void textelement_updatetext(element_t* element, font_t* font, cmdqueue_t* cmdque
 
     if (data->string->length == 0 && element->focused == 0) string = data->prompt;
 
-    data->metrics   = mem_realloc(data->metrics, sizeof(glyphmetrics_t) * (string->length + 2));
-    mtbmp_t* bitmap = font_render_text(element->width + 1, element->height + 1, string, font, data->style, data->metrics, data->selections);
+    data->metrics     = mem_realloc(data->metrics, sizeof(glyphmetrics_t) * (string->length + 2));
+    bm_rgba_t* bitmap = font_render_text(element->width + 1, element->height + 1, string, font, data->style, data->metrics, data->selections);
 
     if (bitmap != NULL)
     {
-	element->width  = (float) bitmap->width - 1.0;
-	element->height = (float) bitmap->height - 1.0;
+	element->width  = (float) bitmap->w - 1.0;
+	element->height = (float) bitmap->h - 1.0;
     }
 
     if (element->bitmap) REL(element->bitmap);

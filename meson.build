@@ -39,6 +39,7 @@ brawl_inc = include_directories(
 	'src/ext',
 	'src/zc_core',
 	'src/zc_math',
+	'src/zc_gfx',
 	'src/ui')
 
 com_sources = ['src/brawl/audio.c',
@@ -105,7 +106,7 @@ com_sources = ['src/brawl/audio.c',
 	       'src/zc_core/zc_time.c',
 	       'src/zc_core/zc_path.c',
 	       'src/zc_core/zc_channel.c',
-	       'src/zc_core/mtbmp.c',
+	       'src/zc_core/zc_bm_rgba.c',
 
 	       'src/zc_math/zc_vec2.c',
 	       'src/zc_math/zc_util2.c',
@@ -113,6 +114,8 @@ com_sources = ['src/brawl/audio.c',
 	       'src/zc_math/zc_util3.c',
 	       'src/zc_math/zc_vec4.c',
 	       'src/zc_math/zc_mat4.c',
+
+	       'src/zc_gfx/zc_draw.c',
 
 	       'src/ext/nanosvg.h',
 	       'src/ext/stb_image.h',

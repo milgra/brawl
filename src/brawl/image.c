@@ -2,10 +2,10 @@
 #ifndef image_h
 #define image_h
 
-#include "mtbmp.c"
+#include "zc_bm_rgba.c"
 #include "zc_memory.c"
 
-mtbmp_t* image_bmp_from_png(char* path);
+bm_rgba_t* image_bmp_from_png(char* path);
 
 #endif
 
@@ -16,9 +16,9 @@ mtbmp_t* image_bmp_from_png(char* path);
 
 // creates bitmap from a png
 
-mtbmp_t* image_bmp_from_png(char* path)
+bm_rgba_t* image_bmp_from_png(char* path)
 {
-    mtbmp_t* bitmap = CAL(sizeof(mtbmp_t), mtbmp_dealloc, NULL);
+    bm_rgba_t* bitmap = NULL;
 
     if (path != NULL)
     {
@@ -27,15 +27,15 @@ mtbmp_t* image_bmp_from_png(char* path)
 	if (file == NULL) printf("ERROR file does not exists %s", path);
 	else
 	{
-
 	    fclose(file);
 
 	    int components;
+	    int width;
+	    int height;
 
-	    unsigned char* bytes = stbi_load(path, &(bitmap->width), &(bitmap->height), &components, 4);
-	    bitmap->bytes_length = 4 * bitmap->width * bitmap->height;
-	    bitmap->bytes        = CAL(bitmap->bytes_length, NULL, NULL);
-	    memcpy(bitmap->bytes, bytes, bitmap->bytes_length);
+	    unsigned char* bytes = stbi_load(path, &width, &height, &components, 4);
+	    bitmap               = bm_rgba_new(width, height);
+	    memcpy(bitmap->data, bytes, bitmap->size);
 	    stbi_image_free(bytes);
 	}
     }

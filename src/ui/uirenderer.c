@@ -3,8 +3,8 @@
 
 #include "element.c"
 #include "floatbuffer.c"
-#include "mtbmp.c"
 #include "ogl.c"
+#include "zc_bm_rgba.c"
 #include "zc_util2.c"
 #include <sys/time.h>
 
@@ -239,14 +239,14 @@ texture_t* uirenderer_gettextureobj(uirenderer_t* renderer, element_t* element)
 {
     texture_t* texobj = &renderer->textures[renderer->texindex];
 
-    if (texobj->bottompos + element->bitmap->height >= texobj->maxsize)
+    if (texobj->bottompos + element->bitmap->h >= texobj->maxsize)
     {
 	texobj->bottompos = 0;
 	texobj->sidepos += texobj->maxwidth;
 	texobj->maxwidth = 0;
     }
 
-    if (texobj->sidepos + element->bitmap->width >= texobj->maxsize)
+    if (texobj->sidepos + element->bitmap->w >= texobj->maxsize)
     {
 	texobj->bottompos = 0;
 	texobj->sidepos   = 0;
@@ -290,13 +290,13 @@ char uirenderer_addelement(uirenderer_t* renderer, element_t* element)
 		/* upload bitmap as tile in texture */
 
 		glBindTexture(GL_TEXTURE_2D, texobj->name);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, texobj->sidepos, texobj->bottompos, element->bitmap->width, element->bitmap->height, GL_RGBA, GL_UNSIGNED_BYTE, element->bitmap->bytes);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, texobj->sidepos, texobj->bottompos, element->bitmap->w, element->bitmap->h, GL_RGBA, GL_UNSIGNED_BYTE, element->bitmap->data);
 
 		renderer->texturecount++;
-		if (element->bitmap->width > texobj->maxwidth) texobj->maxwidth = element->bitmap->width;
+		if (element->bitmap->w > texobj->maxwidth) texobj->maxwidth = element->bitmap->w;
 
-		int wth = element->bitmap->width;
-		int hth = element->bitmap->height;
+		int wth = element->bitmap->w;
+		int hth = element->bitmap->h;
 
 		/* this is for avoiding texel artifacts */
 
@@ -314,7 +314,7 @@ char uirenderer_addelement(uirenderer_t* renderer, element_t* element)
 		element->texture.llc = v2_init(llx, lly);
 		element->texture.lrc = v2_init(lrx, lry);
 
-		texobj->bottompos += element->bitmap->height;
+		texobj->bottompos += element->bitmap->h;
 
 		element->texture.coordstamp = renderer->texreset;
 	    }
@@ -344,7 +344,7 @@ char uirenderer_addelement(uirenderer_t* renderer, element_t* element)
 	renderer->groups[renderer->groupcount] = group;
     }
 
-    // printf( "ADDING ELEMENT %s x %f y %f w %f h %f tx %f ty %f\n" , element->name , element->finalx , element->finaly , element->width , element->height , element->translation == NULL ? 0.0 : element->translation->x , element->translation == NULL ? 0.0 : element->translation->y );
+    // printf( "ADDING ELEMENT %s x %f y %f w %f h %f tx %f ty %f\n" , element->name , element->finalx , element->finaly , element->width, element->height , element->translation == NULL ? 0.0 : element->translation->x , element->translation == NULL ? 0.0 : element->translation->y );
 
     /* add vertex data to float buffer */
 

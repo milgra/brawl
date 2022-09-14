@@ -44,14 +44,11 @@ If a module is "static" a global variable is used to store it's state, instancin
 
 ### TODO
 
-- ui headerless  
-- mtbmp to bm_rgba  
 - re-write physics and collosion based on cljs-brawl  
 - add snow and other new stuff from cljs-brawl  
 - zc_util2 should show its a math lib 
 - freetype for text rendering  
-	2.5 brawl, first person nezet verekedes kozben lent jobbra  
-	labfej tapadjon foldre  
-	ne sebezzen a hulla amig viszed  
-	rombolhato tereptargyak  
-	intersection detection egyszerusitese  
+- labfej tapadjon foldre  
+- ne sebezzen a hulla amig viszed  
+- rombolhato tereptargyak  
+- intersection detection egyszerusitese  

@@ -72,6 +72,7 @@ void listelement_update(element_t* element, input_t* input);
 
 */
 
+#include "zc_draw.c"
 #include "zc_memory.c"
 #include "zc_vector.c"
 
@@ -94,8 +95,8 @@ element_t* listelement_alloc(
     uint32_t buffersize,
     float    scrollerwidth)
 {
-    mtbmp_t* bitmap = mtbmp_alloc(5, 5);
-    mtbmp_fill_with_color(bitmap, 0, 0, 5, 5, color);
+    bm_rgba_t* bitmap = bm_rgba_new(5, 5);
+    gfx_rect(bitmap, 0, 0, 5, 5, color, 0);
 
     element_t*  element = element_alloc("list", name, x, y, width, height, bitmap);
     listdata_t* data    = CAL(sizeof(listdata_t), listdata_dealloc, NULL);
