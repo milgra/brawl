@@ -91,8 +91,8 @@ com_sources = ['src/brawl/audio.c',
 	       'src/modules/core/zc_log.c',
 	       'src/modules/core/zc_time.c',
 	       'src/modules/core/zc_path.c',
+	       'src/modules/core/zc_channel.c',
 	       'src/modules/core/mtbmp.c',
-	       'src/modules/core/mtpipe.c',
 
 	       'src/modules/utils/str_util.c',
 

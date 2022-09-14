@@ -13,7 +13,7 @@ cellrenderer_t* cellrenderer_alloc(font_t* font, char* respath)
 {
     cellrenderer_t* result     = CAL(sizeof(cellrenderer_t), cellrenderer_dealloc, NULL);
     result->alive              = 1;
-    result->elements_to_render = mtpipe_alloc(100);
+    result->elements_to_render = ch_new(100);
 
     result->input.font = RET(font);
     ;
@@ -43,7 +43,7 @@ void cellrenderer_timerloop(cellrenderer_t* renderer)
 {
     while (renderer->alive)
     {
-	element_t* element = mtpipe_recv(renderer->elements_to_render);
+	element_t* element = ch_recv(renderer->elements_to_render);
 
 	if (element != NULL)
 	{
@@ -71,7 +71,7 @@ void cellrenderer_timerloop(cellrenderer_t* renderer)
 void cellrenderer_queue(cellrenderer_t* renderer, element_t* element)
 {
     RET(element);
-    mtpipe_send(renderer->elements_to_render, element);
+    ch_send(renderer->elements_to_render, element);
 }
 
 /* stops renderer and releases it after */
