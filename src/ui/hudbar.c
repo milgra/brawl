@@ -1,8 +1,7 @@
-
 #ifndef hudbar_h
 #define hudbar_h
 
-#include "element.h"
+#include "element.c"
 #include "font.c"
 
 element_t* hudbarelement_alloc(
@@ -18,10 +17,9 @@ element_t* hudbarelement_alloc(
 
 #if __INCLUDE_LEVEL__ == 0
 
-#include "hudbar.c"
-#include "sliderelement.h"
+#include "sliderelement.c"
 #include "str_util.c"
-#include "textelement.h"
+#include "textelement.c"
 #include "zc_cstring.c"
 #include "zc_memory.c"
 

@@ -48,7 +48,6 @@ If a module is "static" a global variable is used to store it's state, instancin
 - mtbmp to bm_rgba  
 - re-write physics and collosion based on cljs-brawl  
 - add snow and other new stuff from cljs-brawl  
-- update ui renderer to latest  
 - zc_util2 should show its a math lib 
 - freetype for text rendering  
 	2.5 brawl, first person nezet verekedes kozben lent jobbra  

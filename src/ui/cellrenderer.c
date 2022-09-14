@@ -1,8 +1,30 @@
+#ifndef cellrenderer_h
+#define cellrenderer_h
 
+#include "element.c"
+#include "zc_channel.c"
+#include <pthread.h>
+#include <sys/time.h>
+
+typedef struct _cellrenderer_t cellrenderer_t;
+struct _cellrenderer_t
+{
+    char      alive;
+    pthread_t thread;
+
+    input_t input;
+    ch_t*   elements_to_render;
+};
+
+cellrenderer_t* cellrenderer_alloc(font_t* font, char* respath);
+
+void cellrenderer_queue(cellrenderer_t* renderer, element_t* element);
+
+#endif
+
+#if __INCLUDE_LEVEL__ == 0
 
 /* Cell renderer is for background list cell/ui element content rendering to avoid lagging.  */
-
-#include "cellrenderer.h"
 
 void cellrenderer_dealloc(void* pointer);
 void cellrenderer_timerloop(cellrenderer_t* renderer);
@@ -16,7 +38,7 @@ cellrenderer_t* cellrenderer_alloc(font_t* font, char* respath)
     result->elements_to_render = ch_new(100);
 
     result->input.font = RET(font);
-    ;
+
     result->input.type    = kInputTypeRender;
     result->input.respath = respath;
 
@@ -76,3 +98,5 @@ void cellrenderer_stop_and_release(cellrenderer_t* renderer)
 {
     renderer->alive = 0;
 }
+
+#endif

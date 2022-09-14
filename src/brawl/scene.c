@@ -29,9 +29,9 @@
 #include "actor_modifier_walk.c"
 #include "actor_skin.c"
 
-#include "element.h"
+#include "element.c"
 #include "floatbuffer.c"
-#include "textelement.h"
+#include "textelement.c"
 #include "triangulate.c"
 #include "zc_cstring.c"
 #include "zc_memory.c"

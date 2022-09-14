@@ -2,7 +2,7 @@
 #ifndef actor_hud_element_h
 #define actor_hud_element_h
 
-#include "sliderelement.h"
+#include "sliderelement.c"
 
 element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale, font_t* font);
 
@@ -13,7 +13,7 @@ element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale, font
 #include "actor_hud_element.c"
 #include "str_util.c"
 #include "text.c"
-#include "textelement.h"
+#include "textelement.c"
 #include "zc_cstring.c"
 #include "zc_memory.c"
 

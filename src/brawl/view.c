@@ -3,10 +3,10 @@
 #define _view_header
 
 #include "base_metrics.c"
-#include "element.h"
+#include "element.c"
 #include "input.h"
-#include "ui.h"
-#include "uirenderer.h"
+#include "ui.c"
+#include "uirenderer.c"
 #include "zc_map.c"
 
 typedef struct _touch_t touch_t;
@@ -38,14 +38,15 @@ void view_free(void);
 
 #if __INCLUDE_LEVEL__ == 0
 
+#include "textelement.c"
+
 #include "actor.c"
 #include "bus.c"
 #include "defaults.c"
 #include "hudbar.c"
-#include "menuelement.h"
+#include "menuelement.c"
 #include "scene.c"
-#include "sliderelement.h"
-#include "textelement.h"
+#include "sliderelement.c"
 #include "zc_cstring.c"
 #include <linux/limits.h>
 

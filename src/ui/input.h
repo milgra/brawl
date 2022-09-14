@@ -1,5 +1,3 @@
-
-
 #ifndef KineticUI_input_h
 #define KineticUI_input_h
 
