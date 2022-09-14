@@ -18,11 +18,12 @@ element_t* hudbarelement_alloc(
 
 #if __INCLUDE_LEVEL__ == 0
 
-#include "core/mtmem.c"
 #include "hudbar.c"
-#include "mtcstr.c"
 #include "sliderelement.h"
+#include "str_util.c"
 #include "textelement.h"
+#include "zc_cstring.c"
+#include "zc_memory.c"
 
 element_t* hudbarelement_alloc(
     char*   name,
@@ -60,9 +61,9 @@ element_t* hudbarelement_alloc(
 	    .textcolor = 0xFFFFFFFF,
 	    .backcolor = 0xFFFFFF55};
 
-    element_t* lefttext = textelement_alloc("lefttext", 0, 0, width / 2.0, height, mtstr_frombytes("Health"), NULL, font, buttontexts);
+    element_t* lefttext = textelement_alloc("lefttext", 0, 0, width / 2.0, height, str_frombytes("Health"), NULL, font, buttontexts);
 
-    element_t* rghttext = textelement_alloc("righttext", 0, 0, width / 2.0, height, mtstr_frombytes("Power"), NULL, font, buttontexts);
+    element_t* rghttext = textelement_alloc("righttext", 0, 0, width / 2.0, height, str_frombytes("Power"), NULL, font, buttontexts);
 
     element_addsubelement(baseel, leftel);
 
@@ -72,11 +73,11 @@ element_t* hudbarelement_alloc(
 
     element_addsubelement(rghtel, rghttext);
 
-    mtmem_release(leftel);
-    mtmem_release(rghtel);
+    REL(leftel);
+    REL(rghtel);
 
-    mtmem_release(baseel->type);
-    baseel->type = mtcstr_fromcstring("hudbar");
+    REL(baseel->type);
+    baseel->type = cstr_new_cstring("hudbar");
 
     return baseel;
 }

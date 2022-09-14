@@ -4,7 +4,7 @@
 #define vectoranimator_h
 
 #include "math1.c"
-#include "math2.c"
+#include "zc_util2.c"
 #include <stdio.h>
 
 #define kAnimationTypeLinear 0

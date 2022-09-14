@@ -2,12 +2,12 @@
 #ifndef actor_modifier_kick_h
 #define actor_modifier_kick_h
 
+#include "actor_modifier_types.c"
 #include "math1.c"
-#include "math2.c"
-#include "mtmem.c"
+#include "zc_memory.c"
+#include "zc_util2.c"
 #include <stdio.h>
 #include <stdlib.h>
-#include "actor_modifier_types.c"
 
 typedef struct _actor_modifier_kick_t actor_modifier_kick_t;
 struct _actor_modifier_kick_t
@@ -33,15 +33,15 @@ void              actor_modifier_kick_stopkick(actor_modifier_t* modifier, void*
 
 #if __INCLUDE_LEVEL__ == 0
 
-#include "actor_modifier_kick.c"
 #include "actor.c"
+#include "actor_modifier_kick.c"
 
 /* default state */
 
 actor_modifier_t* actor_modifier_kick_alloc()
 {
-    actor_modifier_t*      modifier = mtmem_calloc(sizeof(actor_modifier_t), actor_modifier_kick_destruct);
-    actor_modifier_kick_t* data     = mtmem_calloc(sizeof(actor_modifier_kick_t), NULL);
+    actor_modifier_t*      modifier = CAL(sizeof(actor_modifier_t), actor_modifier_kick_destruct, NULL);
+    actor_modifier_kick_t* data     = CAL(sizeof(actor_modifier_kick_t), NULL, NULL);
 
     modifier->data = data;
     modifier->_new = actor_modifier_kick_new;
@@ -59,7 +59,7 @@ actor_modifier_t* actor_modifier_kick_alloc()
 void actor_modifier_kick_destruct(void* pointer)
 {
     actor_modifier_t* modifier = pointer;
-    mtmem_release(modifier->data);
+    REL(modifier->data);
 }
 
 /* inits kick animation */
@@ -202,7 +202,7 @@ void actor_modifier_kick_new(actor_modifier_t* modifier, actor_modifier_args_t* 
 
 			cmdqueue_add(args->cmdqueue, "scene.kick", NULL, attack);
 
-			mtmem_release(attack);
+			REL(attack);
 		    }
 
 		    data->phase = 1;

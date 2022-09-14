@@ -5,7 +5,7 @@
 
 #include "cmd.c"
 #include "font.c"
-#include "mtstr.c"
+#include "zc_string.c"
 
 #define kInputTypeTimer 0
 

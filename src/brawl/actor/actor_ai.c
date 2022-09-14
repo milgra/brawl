@@ -25,13 +25,13 @@ struct _actor_ai_t
     actor_group_t* locked_enemy;
 
     control_state_t control_state;
-    void (*step)(actor_ai_t*, actor_modifier_args_t*, mtvec_t*);
+    void (*step)(actor_ai_t*, actor_modifier_args_t*, vec_t*);
 };
 
 actor_ai_t* actor_ai_alloc(actor_t* actor, uint32_t color, float level);
 void        actor_ai_set_boss(actor_ai_t* controller, actor_group_t* boss);
 void        actor_ai_set_enemy(actor_ai_t* controller, actor_group_t* enemy);
-void        actor_ai_new(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* agroups);
+void        actor_ai_new(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* agroups);
 void        actor_ai_debug_lines(actor_ai_t* controller, actor_t* actor, floatbuffer_t* linebuffer);
 void        actor_ai_releaselocked(actor_ai_t* ai);
 
@@ -44,15 +44,15 @@ void        actor_ai_releaselocked(actor_ai_t* ai);
 #include <string.h>
 
 void actor_ai_dealloc(void* pointer);
-void actor_ai_stand(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups);
-void actor_ai_attack(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups);
-void actor_ai_follow(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups);
+void actor_ai_stand(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups);
+void actor_ai_attack(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups);
+void actor_ai_follow(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups);
 
 /* default state */
 
 actor_ai_t* actor_ai_alloc(actor_t* actor, uint32_t color, float level)
 {
-    actor_ai_t* controller = mtmem_calloc(sizeof(actor_ai_t), actor_ai_dealloc);
+    actor_ai_t* controller = CAL(sizeof(actor_ai_t), actor_ai_dealloc, NULL);
 
     controller->mode  = kActorAIModeStand;
     controller->color = color;
@@ -70,7 +70,7 @@ void actor_ai_dealloc(void* pointer)
 
 /* standing action */
 
-void actor_ai_stand(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups)
+void actor_ai_stand(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups)
 {
     if (ai->locked_enemy != NULL) ai->step = actor_ai_attack;
     actor_t* actor = args->actor;
@@ -112,7 +112,7 @@ void actor_ai_stand(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups
 			{
 			    char* strings[3]           = {"HEY!", "COME HERE!", "GET SOME!!"};
 			    char* string               = strings[rand() % 2];
-			    current_group->currenttext = mtstr_frombytes(string);
+			    current_group->currenttext = str_frombytes(string);
 
 			    actor_ai_set_enemy(ai, group);
 			    actor_ai_set_boss(ai, NULL);
@@ -131,7 +131,7 @@ void actor_ai_stand(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups
 
 		char* strings[3]           = {"HI BOSS", "FINALLY!", "HOWDY!!"};
 		char* string               = strings[rand() % 2];
-		current_group->currenttext = mtstr_frombytes(string);
+		current_group->currenttext = str_frombytes(string);
 	    }
 
 	    if (ai->locked_enemy == NULL && ai->locked_boss != NULL)
@@ -146,7 +146,7 @@ void actor_ai_stand(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups
 
 /* follow boss action */
 
-void actor_ai_follow(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups)
+void actor_ai_follow(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups)
 {
     if (ai->locked_enemy != NULL) ai->step = actor_ai_attack;
     actor_t* actor = args->actor;
@@ -210,7 +210,7 @@ void actor_ai_follow(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* group
 	level 4 - runs to the other side of the enemy after hit, always hits when have power
 */
 
-void actor_ai_attack(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* groups)
+void actor_ai_attack(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups)
 {
 
     if ((args->ticks + ai->phase) % 20 == 0)
@@ -336,7 +336,7 @@ void actor_ai_attack(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* group
 
 /* new actor controller state */
 
-void actor_ai_new(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* agroups)
+void actor_ai_new(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* agroups)
 {
     actor_t* actor = args->actor;
 
@@ -350,8 +350,8 @@ void actor_ai_new(actor_ai_t* ai, actor_modifier_args_t* args, mtvec_t* agroups)
 
 void actor_ai_releaselocked(actor_ai_t* ai)
 {
-    mtmem_release(ai->locked_enemy);
-    mtmem_release(ai->locked_boss);
+    REL(ai->locked_enemy);
+    REL(ai->locked_boss);
     ai->locked_enemy = NULL;
     ai->locked_boss  = NULL;
 }
@@ -360,18 +360,18 @@ void actor_ai_releaselocked(actor_ai_t* ai)
 
 void actor_ai_set_enemy(actor_ai_t* ai, actor_group_t* enemy)
 {
-    mtmem_release(ai->locked_enemy);
+    if (ai->locked_enemy) REL(ai->locked_enemy);
     ai->locked_enemy = enemy;
-    mtmem_retain(enemy);
+    RET(enemy);
 }
 
 /* set boss */
 
 void actor_ai_set_boss(actor_ai_t* ai, actor_group_t* boss)
 {
-    mtmem_release(ai->locked_boss);
+    if (ai->locked_boss) REL(ai->locked_boss);
     ai->locked_boss = boss;
-    mtmem_retain(boss);
+    RET(boss);
 }
 
 /* adds point to debug point buffer */

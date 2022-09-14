@@ -44,7 +44,7 @@ struct _actor_t
 
     v2_t speed;
 
-    mtvec_t* modifiers;
+    vec_t* modifiers;
 
     actor_modifier_t* ik;
     actor_modifier_t* walk;
@@ -77,17 +77,17 @@ void     actor_updatemetrics(actor_t* actor, base_metrics_t metrics);
 #include "actor_modifier_kick.c"
 #include "actor_modifier_ragdoll.c"
 #include "actor_modifier_walk.c"
-#include "mtcstr.c"
-#include "mtstr.c"
+#include "zc_cstring.c"
+#include "zc_string.c"
 #include <float.h>
 
 /* default state */
 
 actor_t* actor_alloc(v2_t position, char* name)
 {
-    actor_t* actor = mtmem_calloc(sizeof(actor_t), actor_dealloc);
+    actor_t* actor = CAL(sizeof(actor_t), actor_dealloc, NULL);
 
-    actor->name = mtcstr_fromcstring(name);
+    actor->name = cstr_new_cstring(name);
 
     actor->state  = kActorStateJump;
     actor->gothit = 0;
@@ -99,7 +99,7 @@ actor_t* actor_alloc(v2_t position, char* name)
     actor->power_rate  = 0.09;
     actor->health_rate = 0.02;
 
-    actor->modifiers = mtvec_alloc();
+    actor->modifiers = VNEW();
 
     actor->ik   = actor_modifier_ragdoll_alloc();
     actor->walk = actor_modifier_walk_alloc();
@@ -109,15 +109,15 @@ actor_t* actor_alloc(v2_t position, char* name)
     actor->points.base_a = position;
     actor->points.base_b = position;
 
-    mtvec_add(actor->modifiers, actor->jump);
-    mtvec_add(actor->modifiers, actor->walk);
-    mtvec_add(actor->modifiers, actor->ik);
-    mtvec_add(actor->modifiers, actor->kick);
+    VADD(actor->modifiers, actor->jump);
+    VADD(actor->modifiers, actor->walk);
+    VADD(actor->modifiers, actor->ik);
+    VADD(actor->modifiers, actor->kick);
 
-    mtmem_release(actor->ik);
-    mtmem_release(actor->walk);
-    mtmem_release(actor->jump);
-    mtmem_release(actor->kick);
+    REL(actor->ik);
+    REL(actor->walk);
+    REL(actor->jump);
+    REL(actor->kick);
 
     actor_updatemetrics(actor, base_metrics_default());
 
@@ -129,8 +129,8 @@ actor_t* actor_alloc(v2_t position, char* name)
 void actor_dealloc(void* pointer)
 {
     actor_t* actor = pointer;
-    mtmem_release(actor->name);
-    mtmem_release(actor->modifiers);
+    REL(actor->name);
+    REL(actor->modifiers);
 }
 
 /* resets actor to default state and wanted positon */

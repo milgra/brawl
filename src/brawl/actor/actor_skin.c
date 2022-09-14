@@ -28,7 +28,7 @@ void          actor_skin_new(actor_skin_t* skin, actor_t* actor, floatbuffer_t* 
 
 actor_skin_t* actor_skin_alloc()
 {
-    actor_skin_t* skin = mtmem_calloc(sizeof(actor_skin_t), NULL);
+    actor_skin_t* skin = CAL(sizeof(actor_skin_t), NULL, NULL);
 
     /* generate random values */
 

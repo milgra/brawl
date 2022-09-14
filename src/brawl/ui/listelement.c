@@ -9,8 +9,8 @@
 */
 
 #include "listelement.h"
-#include "mtmem.c"
-#include "mtvec.c"
+#include "zc_memory.c"
+#include "zc_vector.c"
 
 void listdata_dealloc(void* pointer);
 void listelement_do_scroll(element_t* element, input_t* input, float y);
@@ -35,12 +35,12 @@ element_t* listelement_alloc(
     mtbmp_fill_with_color(bitmap, 0, 0, 5, 5, color);
 
     element_t*  element = element_alloc("list", name, x, y, width, height, bitmap);
-    listdata_t* data    = mtmem_calloc(sizeof(listdata_t), listdata_dealloc);
+    listdata_t* data    = CAL(sizeof(listdata_t), listdata_dealloc, NULL);
 
     data->list      = list_alloc(height, newatbottom == 1 ? kListAlignBottom : kListAlignTop);
-    data->items     = mtvec_alloc();
-    data->headqueue = mtvec_alloc();
-    data->tailqueue = mtvec_alloc();
+    data->items     = VNEW();
+    data->headqueue = VNEW();
+    data->tailqueue = VNEW();
     data->scrollbar = solidelement_alloc("scrollbar", width - scrollerwidth, 0.0, scrollerwidth, height / 5.0, 0x000000FF);
 
     data->bounce      = 0;
@@ -65,7 +65,7 @@ element_t* listelement_alloc(
     element->data  = data;
     element->input = listelement_input;
 
-    mtmem_release(bitmap);
+    REL(bitmap);
 
     return element;
 }
@@ -76,10 +76,10 @@ void listdata_dealloc(void* pointer)
 {
     listdata_t* list = pointer;
 
-    mtmem_release(list->items);
-    mtmem_release(list->headqueue);
-    mtmem_release(list->tailqueue);
-    mtmem_release(list->scrollbar);
+    REL(list->items);
+    REL(list->headqueue);
+    REL(list->tailqueue);
+    REL(list->scrollbar);
 }
 
 /* resets list */
@@ -93,9 +93,9 @@ char listelement_reset(element_t* element)
 	element_removesubelement(element, list->items->data[index]);
     }
 
-    mtvec_reset(list->items);
-    mtvec_reset(list->tailqueue);
-    mtvec_reset(list->headqueue);
+    vec_reset(list->items);
+    vec_reset(list->tailqueue);
+    vec_reset(list->headqueue);
 
     list->bounce      = 0;
     list->momentum    = 0.0;
@@ -136,8 +136,8 @@ element_t* listelement_headitem(element_t* element)
 {
     listdata_t* list = element->data;
     element_t*  head = NULL;
-    if (list->headqueue->length > 0) head = mtvec_tail(list->headqueue);
-    else head = mtvec_head(list->items);
+    if (list->headqueue->length > 0) head = vec_tail(list->headqueue);
+    else head = vec_head(list->items);
     return head;
 }
 
@@ -147,8 +147,8 @@ element_t* listelement_tailitem(element_t* element)
 {
     listdata_t* list = element->data;
     element_t*  tail = NULL;
-    if (list->tailqueue->length > 0) tail = mtvec_tail(list->tailqueue);
-    else tail = mtvec_tail(list->items);
+    if (list->tailqueue->length > 0) tail = vec_tail(list->tailqueue);
+    else tail = vec_tail(list->items);
     return tail;
 }
 
@@ -157,7 +157,7 @@ element_t* listelement_tailitem(element_t* element)
 char listelement_queueheaditem(element_t* element, element_t* item)
 {
     listdata_t* list = element->data;
-    mtvec_add(list->headqueue, item);
+    VADD(list->headqueue, item);
     if (list->headqueue->length == list->buffersize) return 1;
     else return 0;
 }
@@ -167,7 +167,7 @@ char listelement_queueheaditem(element_t* element, element_t* item)
 char listelement_queuetailitem(element_t* element, element_t* item)
 {
     listdata_t* list = element->data;
-    mtvec_add(list->tailqueue, item);
+    VADD(list->tailqueue, item);
     if (list->tailqueue->length == list->buffersize) return 1;
     else return 0;
 }
@@ -225,8 +225,8 @@ void listelement_do_scroll(element_t* element, input_t* input, float y)
 	    element_t* newhead = list->headqueue->data[0];
 	    if (newhead->texture.ready == 1 || newhead->texture.tiled == 0)
 	    {
-		mtvec_addatindex(list->items, newhead, 0);
-		mtvec_removeatindex(list->headqueue, 0);
+		vec_ins(list->items, newhead, 0);
+		vec_rem_at_index(list->headqueue, 0);
 		element_addsubelementatindex(element, newhead, 0);
 
 		list_addhead(list->list, newhead->height);
@@ -246,14 +246,14 @@ void listelement_do_scroll(element_t* element, input_t* input, float y)
 
     while (list->list->removehead == 1 && list->items > 0)
     {
-	element_t* head = mtvec_head(list->items);
+	element_t* head = vec_head(list->items);
 
-	mtvec_addatindex(list->headqueue, head, 0);
-	mtvec_removeatindex(list->items, 0);
+	vec_ins(list->headqueue, head, 0);
+	vec_rem_at_index(list->items, 0);
 	element_removesubelement(element, head);
 
 	list_removehead(list->list, head->height);
-	if (list->headqueue->length > list->buffersize) mtvec_removeatindex(list->headqueue, list->headqueue->length - 1);
+	if (list->headqueue->length > list->buffersize) vec_rem_at_index(list->headqueue, list->headqueue->length - 1);
 
 	input->upload = 1;
     }
@@ -266,8 +266,8 @@ void listelement_do_scroll(element_t* element, input_t* input, float y)
 	    element_t* newtail = list->tailqueue->data[0];
 	    if (newtail->texture.ready == 1 || newtail->texture.tiled == 0)
 	    {
-		mtvec_add(list->items, newtail);
-		mtvec_removeatindex(list->tailqueue, 0);
+		VADD(list->items, newtail);
+		vec_rem_at_index(list->tailqueue, 0);
 		element_addsubelementatindex(element, newtail, list->items->length - 1);
 
 		list_addtail(list->list, newtail->height);
@@ -287,14 +287,14 @@ void listelement_do_scroll(element_t* element, input_t* input, float y)
 
     while (list->list->removetail == 1 && list->items > 0)
     {
-	element_t* tail = mtvec_tail(list->items);
+	element_t* tail = vec_tail(list->items);
 
-	mtvec_addatindex(list->tailqueue, tail, 0);
-	mtvec_removeatindex(list->items, list->items->length - 1);
+	vec_ins(list->tailqueue, tail, 0);
+	vec_rem_at_index(list->items, list->items->length - 1);
 	element_removesubelement(element, tail);
 
 	list_removetail(list->list, tail->height);
-	if (list->tailqueue->length > list->buffersize) mtvec_removeatindex(list->tailqueue, list->tailqueue->length - 1);
+	if (list->tailqueue->length > list->buffersize) vec_rem_at_index(list->tailqueue, list->tailqueue->length - 1);
 
 	input->upload = 1;
     }
@@ -365,7 +365,7 @@ void listelement_touch_up(element_t* element, input_t* input)
     if (list->firepull == 1)
     {
 	list->firepull   = 0;
-	char* onpulldown = mtmap_get(element->actions, "onpulldown");
+	char* onpulldown = MGET(element->actions, "onpulldown");
 	if (onpulldown != NULL) cmdqueue_add(input->cmdqueue, onpulldown, element, NULL);
     }
 
@@ -374,12 +374,12 @@ void listelement_touch_up(element_t* element, input_t* input)
 
     if (list->list->zoom == 0.0)
     {
-	char* onzoomdown = mtmap_get(element->actions, "onzoomdown");
+	char* onzoomdown = MGET(element->actions, "onzoomdown");
 	if (onzoomdown != NULL) cmdqueue_add(input->cmdqueue, onzoomdown, element, NULL);
     }
     else if (list->list->zoom > 1.0)
     {
-	char* onzoomup = mtmap_get(element->actions, "onzoomup");
+	char* onzoomup = MGET(element->actions, "onzoomup");
 	if (onzoomup != NULL) cmdqueue_add(input->cmdqueue, onzoomup, element, NULL);
     }
 
@@ -406,12 +406,12 @@ void listelement_zoomend(element_t* element, input_t* input)
     listdata_t* list = element->data;
     if (list->list->zoom == 0.0)
     {
-	char* onzoomdown = mtmap_get(element->actions, "onzoomdown");
+	char* onzoomdown = MGET(element->actions, "onzoomdown");
 	if (onzoomdown != NULL) cmdqueue_add(input->cmdqueue, onzoomdown, element, NULL);
     }
     else if (list->list->zoom > 1.0)
     {
-	char* onzoomup = mtmap_get(element->actions, "onzoomup");
+	char* onzoomup = MGET(element->actions, "onzoomup");
 	if (onzoomup != NULL) cmdqueue_add(input->cmdqueue, onzoomup, element, NULL);
     }
 
@@ -499,7 +499,7 @@ void listelement_scroll_end(element_t* element, input_t* input)
     if (list->firepull == 1)
     {
 	list->firepull   = 0;
-	char* onpulldown = mtmap_get(element->actions, "onpulldown");
+	char* onpulldown = MGET(element->actions, "onpulldown");
 
 	if (onpulldown != NULL) cmdqueue_add(input->cmdqueue, onpulldown, element, NULL);
     }
@@ -560,14 +560,14 @@ void listelement_timer(element_t* element, input_t* input)
 	{
 	    if (list->list->align == kListAlignBottom)
 	    {
-		element_t* tail = mtvec_tail(list->items);
+		element_t* tail = vec_tail(list->items);
 		list->momentum  = (element->height - (list->translation.y + tail->y + tail->height)) / 10.0;
 		list->bounce    = 1;
 		list->autospeed = 0.0;
 	    }
 	    else
 	    {
-		element_t* head = mtvec_head(list->items);
+		element_t* head = vec_head(list->items);
 		list->momentum  = -(list->translation.y + head->y) / 10.0;
 		list->bounce    = 1;
 		list->autospeed = 0.0;
@@ -575,15 +575,15 @@ void listelement_timer(element_t* element, input_t* input)
 	}
 	else if (list->list->needshead == 1)
 	{
-	    element_t* head = mtvec_head(list->items);
+	    element_t* head = vec_head(list->items);
 	    list->momentum  = -(list->translation.y + head->y) / 10.0;
 	    list->bounce    = 1;
 	    list->autospeed = 0.0;
 	}
 	else if (list->list->needstail == 1)
 	{
-	    element_t* head = mtvec_head(list->items);
-	    element_t* tail = mtvec_tail(list->items);
+	    element_t* head = vec_head(list->items);
+	    element_t* tail = vec_tail(list->items);
 	    list->momentum  = (element->height - (list->translation.y + tail->y + tail->height)) / 10.0;
 	    if (list->list->align == kListAlignTop) list->momentum = -(list->translation.y + head->y) / 10.0;
 	    list->bounce    = 1;
@@ -598,8 +598,8 @@ void listelement_timer(element_t* element, input_t* input)
 	list->momentum = 0.0;
 	if (list->items->length > 0)
 	{
-	    element_t* head = mtvec_head(list->items);
-	    element_t* tail = mtvec_tail(list->items);
+	    element_t* head = vec_head(list->items);
+	    element_t* tail = vec_tail(list->items);
 
 	    if (list->translation.y + head->y < 5.0 || list->translation.y + tail->y + tail->height > element->height - 5.0)
 	    {

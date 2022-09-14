@@ -1,83 +1,82 @@
 
 
-    /* Cell renderer is for background list cell/ui element content rendering to avoid lagging.  */
+/* Cell renderer is for background list cell/ui element content rendering to avoid lagging.  */
 
-    #include "cellrenderer.h"
+#include "cellrenderer.h"
 
+void cellrenderer_dealloc(void* pointer);
+void cellrenderer_timerloop(cellrenderer_t* renderer);
 
-    void cellrenderer_dealloc( void* pointer );
-	void cellrenderer_timerloop( cellrenderer_t* renderer );
+/* alloc cellrenderer */
 
+cellrenderer_t* cellrenderer_alloc(font_t* font, char* respath)
+{
+    cellrenderer_t* result     = CAL(sizeof(cellrenderer_t), cellrenderer_dealloc, NULL);
+    result->alive              = 1;
+    result->elements_to_render = mtpipe_alloc(100);
 
-    /* alloc cellrenderer */
+    result->input.font = RET(font);
+    ;
+    result->input.type    = kInputTypeRender;
+    result->input.respath = respath;
 
-    cellrenderer_t* cellrenderer_alloc( font_t* font , char* respath )
+#ifndef ASMJS
+    pthread_create(&result->thread, NULL, (void*) cellrenderer_timerloop, result);
+    RET(result);
+#endif
+
+    return result;
+}
+
+/* dealloc cellrenderer */
+
+void cellrenderer_dealloc(void* pointer)
+{
+    cellrenderer_t* renderer = pointer;
+    REL(renderer->elements_to_render);
+    REL(renderer->input.font);
+}
+
+/* timer thread */
+
+void cellrenderer_timerloop(cellrenderer_t* renderer)
+{
+    while (renderer->alive)
     {
-        cellrenderer_t* result = mtmem_calloc( sizeof( cellrenderer_t ), cellrenderer_dealloc );
-        result->alive = 1;
-        result->elements_to_render = mtpipe_alloc( 100 );
+	element_t* element = mtpipe_recv(renderer->elements_to_render);
 
-        result->input.font = mtmem_retain( font );;
-        result->input.type = kInputTypeRender;
-        result->input.respath = respath;
-
-        #ifndef ASMJS
-        pthread_create(&result->thread, NULL, (void*)cellrenderer_timerloop , result );
-        mtmem_retain( result );
-        #endif
-
-        return result;
-    }
-
-    /* dealloc cellrenderer */
-
-    void cellrenderer_dealloc( void* pointer )
-    {
-        cellrenderer_t* renderer = pointer;
-        mtmem_release( renderer->elements_to_render );
-        mtmem_release( renderer->input.font );
-    }
-
-    /* timer thread */
-
-	void cellrenderer_timerloop( cellrenderer_t* renderer )
+	if (element != NULL)
 	{
-        while ( renderer->alive )
-        {
-            element_t* element = mtpipe_recv( renderer->elements_to_render );
-
-            if ( element != NULL )
-            {
-                element->input( element , &renderer->input );
-                mtmem_release( element );
-            }
-            else
-            {
-                #ifdef RASPBERRY
-                usleep( 100 );
-                #else
-                struct timespec time;
-                time.tv_sec = 0;
-                time.tv_nsec = 100000000L;
-                nanosleep(&time , (struct timespec *)NULL);
-                #endif
-            }
-        }
-
-        mtmem_release( renderer );
+	    element->input(element, &renderer->input);
+	    REL(element);
 	}
-
-    /* queue element for render */
-
-    void cellrenderer_queue( cellrenderer_t* renderer , element_t* element )
-    {
-        mtmem_retain( element );
-        mtpipe_send( renderer->elements_to_render , element );
+	else
+	{
+#ifdef RASPBERRY
+	    usleep(100);
+#else
+	    struct timespec time;
+	    time.tv_sec  = 0;
+	    time.tv_nsec = 100000000L;
+	    nanosleep(&time, (struct timespec*) NULL);
+#endif
+	}
     }
 
-    /* stops renderer and releases it after */
+    REL(renderer);
+}
 
-    void cellrenderer_stop_and_release( cellrenderer_t* renderer )
-    {
-        renderer->alive = 0;
-    }
+/* queue element for render */
+
+void cellrenderer_queue(cellrenderer_t* renderer, element_t* element)
+{
+    RET(element);
+    mtpipe_send(renderer->elements_to_render, element);
+}
+
+/* stops renderer and releases it after */
+
+void cellrenderer_stop_and_release(cellrenderer_t* renderer)
+{
+    renderer->alive = 0;
+}

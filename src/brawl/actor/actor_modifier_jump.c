@@ -5,7 +5,7 @@
 #include "actor.c"
 #include "actor_modifier_jump_points.c"
 #include "math1.c"
-#include "mtmem.c"
+#include "zc_memory.c"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,8 +30,8 @@ struct _actor_modifier_jump_t
     mass2_t* mass_a;
     mass2_t* mass_b;
 
-    mtvec_t* masses_a;
-    mtvec_t* masses_b;
+    vec_t* masses_a;
+    vec_t* masses_b;
 
     v2_t* activefoot;
     v2_t* passivefoot;
@@ -58,8 +58,8 @@ void              actor_modifier_jump_stopkick(actor_modifier_t* modifier);
 
 actor_modifier_t* actor_modifier_jump_alloc()
 {
-    actor_modifier_t*      modifier = mtmem_calloc(sizeof(actor_modifier_t), actor_modifier_jump_destruct);
-    actor_modifier_jump_t* data     = mtmem_calloc(sizeof(actor_modifier_jump_t), NULL);
+    actor_modifier_t*      modifier = CAL(sizeof(actor_modifier_t), actor_modifier_jump_destruct, NULL);
+    actor_modifier_jump_t* data     = CAL(sizeof(actor_modifier_jump_t), NULL, NULL);
 
     modifier->data = data;
     modifier->_new = actor_modifier_jump_new;
@@ -73,14 +73,14 @@ actor_modifier_t* actor_modifier_jump_alloc()
     data->stepsize  = FLT_MAX;
     data->squatsize = 0.0;
 
-    data->masses_a = mtvec_alloc();
-    data->masses_b = mtvec_alloc();
+    data->masses_a = VNEW();
+    data->masses_b = VNEW();
 
     data->mass_a = mass2_alloc(v2_init(0.0, 0.0), 4.0, 10.0, 0.0);
     data->mass_b = mass2_alloc(v2_init(0.0, 0.0), 4.0, 10.0, 0.0);
 
-    mtvec_add(data->masses_a, data->mass_a);
-    mtvec_add(data->masses_b, data->mass_b);
+    VADD(data->masses_a, data->mass_a);
+    VADD(data->masses_b, data->mass_b);
 
     data->toosteep = 0;
 
@@ -94,13 +94,13 @@ void actor_modifier_jump_destruct(void* pointer)
     actor_modifier_t*      modifier = pointer;
     actor_modifier_jump_t* data     = modifier->data;
 
-    mtmem_release(data->masses_a);
-    mtmem_release(data->masses_b);
+    REL(data->masses_a);
+    REL(data->masses_b);
 
-    mtmem_release(data->mass_a);
-    mtmem_release(data->mass_b);
+    REL(data->mass_a);
+    REL(data->mass_b);
 
-    mtmem_release(modifier->data);
+    REL(modifier->data);
 }
 
 /* sends punch action to controller */
@@ -113,7 +113,7 @@ void actor_modifier_jump_sendpunchaction(actor_modifier_t* modifier, actor_modif
 
     cmdqueue_add(args->cmdqueue, "scene.punch", NULL, attack);
 
-    mtmem_release(attack);
+    REL(attack);
 }
 
 /* sends kick action to controller */
@@ -126,7 +126,7 @@ void actor_modifier_jump_sendkickaction(actor_modifier_t* modifier, actor_modifi
 
     cmdqueue_add(args->cmdqueue, "scene.kick", NULL, attack);
 
-    mtmem_release(attack);
+    REL(attack);
 }
 
 /* stops punch movement */
@@ -270,7 +270,7 @@ void actor_modifier_jump_do_jump(actor_modifier_t* modifier, actor_modifier_args
 	//                    {
 	//                        mtstr_t* text = mtstr_frombytes("Fell of from edge");
 	//                        cmdqueue_delay( args->cmdqueue, "scene.showwasted", text, NULL, args->ticks + 180 );
-	//                        mtmem_release( text );
+	//                        REL( text );
 	//                    }
 	//				}
 	//            }
@@ -288,9 +288,9 @@ void actor_modifier_jump_do_jump(actor_modifier_t* modifier, actor_modifier_args
 
 		if (strcmp(actor->name, "hero") == 0)
 		{
-		    mtstr_t* text = mtstr_frombytes("Crushed to the ground");
+		    str_t* text = str_frombytes("Crushed to the ground");
 		    cmdqueue_delay(args->cmdqueue, "scene.showwasted", text, NULL, args->ticks + 180);
-		    mtmem_release(text);
+		    REL(text);
 		}
 	    }
 	    else actor->state = kActorStateWalk;
@@ -340,9 +340,9 @@ void actor_modifier_jump_do_jump(actor_modifier_t* modifier, actor_modifier_args
 	    actor->state = kActorStateDeath;
 	    if (strcmp(actor->name, "hero") == 0)
 	    {
-		mtstr_t* text = mtstr_frombytes("Crushed to the ground");
+		str_t* text = str_frombytes("Crushed to the ground");
 		cmdqueue_delay(args->cmdqueue, "scene.showwasted", text, NULL, args->ticks + 180);
-		mtmem_release(text);
+		REL(text);
 	    }
 	}
 

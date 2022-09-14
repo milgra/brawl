@@ -4,7 +4,7 @@
 
 #include "actor_modifier_walk_points.c"
 #include "math1.c"
-#include "mtmem.c"
+#include "zc_memory.c"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -51,8 +51,8 @@ void              actor_modifier_walk_stoppunch(actor_modifier_t* modifier);
 
 actor_modifier_t* actor_modifier_walk_alloc()
 {
-    actor_modifier_t*      modifier = mtmem_calloc(sizeof(actor_modifier_t), actor_modifier_walk_destruct);
-    actor_modifier_walk_t* data     = mtmem_calloc(sizeof(actor_modifier_walk_t), NULL);
+    actor_modifier_t*      modifier = CAL(sizeof(actor_modifier_t), actor_modifier_walk_destruct, NULL);
+    actor_modifier_walk_t* data     = CAL(sizeof(actor_modifier_walk_t), NULL, NULL);
 
     modifier->data = data;
     modifier->_new = actor_modifier_walk_new;
@@ -81,7 +81,7 @@ void actor_modifier_walk_destruct(void* pointer)
 {
     actor_modifier_t* modifier = pointer;
 
-    mtmem_release(modifier->data);
+    REL(modifier->data);
 }
 
 /* sends punch action to controller */
@@ -94,7 +94,7 @@ void actor_modifier_walk_sendpunchaction(actor_modifier_t* modifier, actor_modif
 
     cmdqueue_add(args->cmdqueue, "scene.punch", NULL, attack);
 
-    mtmem_release(attack);
+    REL(attack);
 }
 
 /* stops punch movement */
@@ -130,9 +130,9 @@ void actor_modifier_walk_check_ground(actor_modifier_t* modifier, actor_modifier
 	printf("DEATH BY NO GROUND");
 	if (strcmp(actor->name, "hero") == 0)
 	{
-	    mtstr_t* text = mtstr_frombytes("No ground for foot");
+	    str_t* text = str_frombytes("No ground for foot");
 	    cmdqueue_delay(args->cmdqueue, "scene.showwasted", text, NULL, args->ticks + 180);
-	    mtmem_release(text);
+	    REL(text);
 	}
     }
 }
@@ -420,7 +420,7 @@ void actor_modifier_walk_new(actor_modifier_t* modifier, actor_modifier_args_t* 
 	    {
 		attack_t* attack = attack_alloc(actor, actor->points.neck, v2_sub(actor->points.hand_a, actor->points.neck), 1000.0);
 		cmdqueue_add(args->cmdqueue, "scene.shoot", NULL, attack);
-		mtmem_release(attack);
+		REL(attack);
 	    }
 
 	    if (data->is_moving == 0 && data->wants_to_jump == 1)

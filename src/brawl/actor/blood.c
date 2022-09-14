@@ -4,9 +4,9 @@
 
 #include "cmd.c"
 #include "floatbuffer.c"
-#include "math2.c"
 #include "ogl.c"
 #include "physics2.c"
+#include "zc_util2.c"
 #include <stdio.h>
 
 typedef struct _blood_t blood_t;
@@ -29,7 +29,7 @@ void     blood_new_skin(blood_t* blood, floatbuffer_t* buffer);
 
 blood_t* blood_alloc(v2_t trans, v2_t basis)
 {
-    blood_t* blood = mtmem_calloc(sizeof(blood_t), blood_dealloc);
+    blood_t* blood = CAL(sizeof(blood_t), blood_dealloc, NULL);
 
     blood->mass        = mass2_alloc(trans, 4.0, 5.0, .2);
     blood->mass->basis = v2_scale(basis, 2.0);
@@ -43,7 +43,7 @@ void blood_dealloc(void* pointer)
 {
     blood_t* blood = pointer;
 
-    mtmem_release(blood->mass);
+    REL(blood->mass);
 }
 
 /* new state */

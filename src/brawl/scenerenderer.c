@@ -2,10 +2,11 @@
 #ifndef scenerenderer_h
 #define scenerenderer_h
 
+#include "bus.c"
 #include "floatbuffer.c"
-#include "math4.c"
-#include "mtbus.c"
 #include "ogl.c"
+#include "zc_mat4.c"
+#include <string.h>
 
 typedef struct _gamerenderdata_t
 {
@@ -45,7 +46,7 @@ void scenerenderer_draw_unit_quad(void);
 
 scenerenderer_t renderer;
 
-#include "mtmem.c"
+#include "zc_memory.c"
 
 #if defined(IOS) || defined(ASMJS) || defined(ANDROID)
 const char* gvertex_point_source =
@@ -70,7 +71,7 @@ void scenerenderer_onmessage(const char* name, void* data);
 void scenerenderer_init(float width, float height)
 {
 
-    mtbus_subscribe("RND", scenerenderer_onmessage);
+    bus_subscribe("RND", scenerenderer_onmessage);
 
     const char* uniforms[]   = {"1", "projection"};
     const char* attributes[] = {"2", "position", "color"};

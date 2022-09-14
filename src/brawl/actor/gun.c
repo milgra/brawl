@@ -33,7 +33,7 @@ void   gun_new_skin(gun_t* gun, floatbuffer_t* buffer);
 gun_t* gun_alloc(v2_t trans, v2_t basis)
 {
 
-    gun_t* gun = mtmem_calloc(sizeof(gun_t), gun_dealloc);
+    gun_t* gun = CAL(sizeof(gun_t), gun_dealloc, NULL);
 
     gun->mass        = mass2_alloc(trans, 4.0, 5.0, .2);
     gun->mass->basis = v2_scale(basis, 2.0);
@@ -49,7 +49,7 @@ void gun_dealloc(void* pointer)
 
     gun_t* gun = pointer;
 
-    mtmem_release(gun->mass);
+    REL(gun->mass);
 }
 
 /* new state */

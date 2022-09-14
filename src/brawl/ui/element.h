@@ -3,12 +3,13 @@
 #ifndef element_h
 #define element_h
 
-#include <stdio.h>
-#include <sys/time.h>
 #include "input.h"
 #include "mtbmp.c"
-#include "mtvec.c"
-#include "math2.c"
+#include "zc_map.c"
+#include "zc_util2.c"
+#include "zc_vector.c"
+#include <stdio.h>
+#include <sys/time.h>
 
 typedef struct _element_animation_t
 {
@@ -69,8 +70,8 @@ struct _element_t
     float finaly; /* absolute y position */
 
     mtbmp_t* bitmap;      /* element's bitmap that will be used in the opengl texture map */
-    mtmap_t* actions;     /* element actions */
-    mtvec_t* subelements; /* subelements */
+    map_t*   actions;     /* element actions */
+    vec_t*   subelements; /* subelements */
     v2_t*    translation; /* translation, the address is used by the renderer to group elements for rendering */
 
     element_texture_t   texture;   /* texture information */
@@ -104,7 +105,7 @@ void element_addsubelementatindex(element_t* element, element_t* subelement, siz
 
 void element_removesubelement(element_t* element, element_t* subelement);
 
-void element_collectelements(element_t* element, v2_t parent, mtvec_t* vector);
+void element_collectelements(element_t* element, v2_t parent, vec_t* vector);
 
 void element_animateto(element_t* element, float x, float y, int delay, char* action);
 
@@ -133,12 +134,12 @@ element_t* imageelement_alloc(
 void imageelement_resize(element_t* element, float width, float height);
 
 element_t* videoelement_alloc(
-    char*    name,
-    float    x,
-    float    y,
-    float    width,
-    float    height,
-    mtstr_t* path);
+    char*  name,
+    float  x,
+    float  y,
+    float  width,
+    float  height,
+    str_t* path);
 
 void videoelement_resize(element_t* element, float width, float height);
 

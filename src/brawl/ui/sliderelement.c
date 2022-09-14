@@ -1,8 +1,8 @@
 
 
 #include "sliderelement.h"
-#include "mtmem.c"
 #include "textelement.h"
+#include "zc_memory.c"
 #include <float.h>
 
 void sliderelement_input(element_t* element, input_t* input);
@@ -23,11 +23,11 @@ element_t* sliderelement_alloc(
     element_t* element = solidelement_alloc(name, x, y, width, height, backcolor);
     element_t* bar     = solidelement_alloc("bar", 0, 0, width, height, frontcolor);
 
-    sliderdata_t* data = mtmem_calloc(sizeof(sliderdata_t), NULL);
+    sliderdata_t* data = CAL(sizeof(sliderdata_t), NULL, NULL);
 
     element_addsubelement(element, bar);
 
-    mtmem_release(bar);
+    REL(bar);
 
     element_settype(element, "slider");
 
@@ -106,7 +106,7 @@ void sliderelement_input(element_t* element, input_t* input)
 	    {
 		float ratio = (input->floata - element->finalx) / element->width;
 		sliderelement_setratio(element, input, ratio);
-		char* onslide = mtmap_get(element->actions, "onslide");
+		char* onslide = MGET(element->actions, "onslide");
 		if (onslide != NULL) cmdqueue_add(input->cmdqueue, onslide, element, NULL);
 	    }
 	    break;

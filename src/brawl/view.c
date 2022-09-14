@@ -5,9 +5,9 @@
 #include "base_metrics.c"
 #include "element.h"
 #include "input.h"
-#include "mtmap.c"
 #include "ui.h"
 #include "uirenderer.h"
+#include "zc_map.c"
 
 typedef struct _touch_t touch_t;
 struct _touch_t
@@ -24,7 +24,7 @@ struct _view_t
 
     ui_t*         ui;
     element_t*    uibase;
-    mtmap_t*      uielements;
+    map_t*        uielements;
     uirenderer_t* uirenderer;
 
     base_metrics_t hero_metrics;
@@ -39,14 +39,15 @@ void view_free(void);
 #if __INCLUDE_LEVEL__ == 0
 
 #include "actor.c"
+#include "bus.c"
 #include "defaults.c"
 #include "hudbar.c"
 #include "menuelement.h"
-#include "mtbus.c"
-#include "mtcstr.c"
 #include "scene.c"
 #include "sliderelement.h"
 #include "textelement.h"
+#include "zc_cstring.c"
+#include <linux/limits.h>
 
 view_t view;
 
@@ -68,7 +69,7 @@ void view_init_tip(textstyle_t textstyle);
 void view_init()
 {
 
-    mtbus_subscribe("VIEW", view_onmessage);
+    bus_subscribe("VIEW", view_onmessage);
 
     textstyle_t textstyle =
 	{
@@ -88,7 +89,7 @@ void view_init()
 
     view.ui           = ui_alloc(100.0);
     view.uibase       = element_alloc("base", "base", 0, 0, defaults.width, defaults.height, NULL);
-    view.uielements   = mtmap_alloc();
+    view.uielements   = MNEW();
     view.uirenderer   = uirenderer_alloc(defaults.width, defaults.height);
     view.cmdqueue     = cmdqueue_alloc();
     view.hero_metrics = base_metrics_default();
@@ -124,19 +125,19 @@ void view_init_controls(textstyle_t textstyle)
 
     element_t* controlsbase = solidelement_alloc("controlsbase", 0, 0, width, height, 0x00000000);
 
-    mtmap_put(view.uielements, "controlsbase", controlsbase);
+    MPUT(view.uielements, "controlsbase", controlsbase);
 
     controlsbase->autosize.fillx = 1;
     controlsbase->autosize.filly = 1;
 
-    char* hitpath   = mtcstr_fromformat("%s/hiticon.png", defaults.respath, NULL);
-    char* kickpath  = mtcstr_fromformat("%s/kickicon.png", defaults.respath, NULL);
-    char* blockpath = mtcstr_fromformat("%s/blockicon.png", defaults.respath, NULL);
-    char* leftpath  = mtcstr_fromformat("%s/leftarrow.png", defaults.respath, NULL);
-    char* rightpath = mtcstr_fromformat("%s/rightarrow.png", defaults.respath, NULL);
-    char* uppath    = mtcstr_fromformat("%s/uparrow.png", defaults.respath, NULL);
-    char* downpath  = mtcstr_fromformat("%s/downarrow.png", defaults.respath, NULL);
-    char* shootpath = mtcstr_fromformat("%s/shooticon.png", defaults.respath, NULL);
+    char* hitpath   = cstr_new_format(PATH_MAX, "%s/hiticon.png", defaults.respath, NULL);
+    char* kickpath  = cstr_new_format(PATH_MAX, "%s/kickicon.png", defaults.respath, NULL);
+    char* blockpath = cstr_new_format(PATH_MAX, "%s/blockicon.png", defaults.respath, NULL);
+    char* leftpath  = cstr_new_format(PATH_MAX, "%s/leftarrow.png", defaults.respath, NULL);
+    char* rightpath = cstr_new_format(PATH_MAX, "%s/rightarrow.png", defaults.respath, NULL);
+    char* uppath    = cstr_new_format(PATH_MAX, "%s/uparrow.png", defaults.respath, NULL);
+    char* downpath  = cstr_new_format(PATH_MAX, "%s/downarrow.png", defaults.respath, NULL);
+    char* shootpath = cstr_new_format(PATH_MAX, "%s/shooticon.png", defaults.respath, NULL);
 
     float btnsize   = 110.0 * scale;
     float icnsize   = 50.0 * scale;
@@ -161,7 +162,7 @@ void view_init_controls(textstyle_t textstyle)
     element_t* downlabel = solidelement_alloc("downlabel", 732 * scale, 688 * scale, btnsize, btnsize, 0xFFFFFFFF);
     element_t* downicon  = imageelement_alloc("downicon", icnmargin, icnmargin, icnsize, icnsize, downpath);
 
-    mtmem_releaseeach(hitpath, kickpath, blockpath, leftpath, rightpath, uppath, downpath, shootpath, NULL);
+    mem_release_each(hitpath, kickpath, blockpath, leftpath, rightpath, uppath, downpath, shootpath, NULL);
 
     element_setaction(punchlabel, "ontouchdown", "ctrldown");
     element_setaction(blocklabel, "ontouchdown", "ctrldown");
@@ -216,10 +217,10 @@ void view_init_controls(textstyle_t textstyle)
 
 #ifdef OSX
     bulletstyle.backcolor = 0;
-    element_t* punchtext  = textelement_alloc("punchtext", 0, 0, 40 * scale, 40 * scale, mtstr_frombytes("'F'"), NULL, defaults.font, bulletstyle);
-    element_t* blocktext  = textelement_alloc("blocktext", 0, 0, 40 * scale, 40 * scale, mtstr_frombytes("'D'"), NULL, defaults.font, bulletstyle);
-    element_t* kicktext   = textelement_alloc("kicktext", 0, 0, 40 * scale, 40 * scale, mtstr_frombytes("'S'"), NULL, defaults.font, bulletstyle);
-    element_t* shoottext  = textelement_alloc("shoottext", 0, 0, 40 * scale, 40 * scale, mtstr_frombytes("'C'"), NULL, defaults.font, bulletstyle);
+    element_t* punchtext  = textelement_alloc("punchtext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'F'"), NULL, defaults.font, bulletstyle);
+    element_t* blocktext  = textelement_alloc("blocktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'D'"), NULL, defaults.font, bulletstyle);
+    element_t* kicktext   = textelement_alloc("kicktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'S'"), NULL, defaults.font, bulletstyle);
+    element_t* shoottext  = textelement_alloc("shoottext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'C'"), NULL, defaults.font, bulletstyle);
 
     element_addsubelement(punchlabel, punchtext);
     element_addsubelement(blocklabel, blocktext);
@@ -243,11 +244,11 @@ void view_init_hud(textstyle_t textstyle)
 
     element_t* levelbar   = sliderelement_alloc("skillbar", 0.0 * scale, 0.0 * scale, 140 * scale, 40.0 * scale, 0x00AA00FF, 0x000000FF, 0, 0);
     element_t* leveltext  = textelement_alloc("skilltext", 0, 0, 140 * scale, 40 * scale, NULL, NULL, defaults.font, textstyle);
-    element_t* menubutton = textelement_alloc("menubutton", width - 300.0 * scale, 0.0 * scale, 140 * scale, 40.0 * scale, mtstr_frombytes("Menu"), NULL, defaults.font, textstyle);
+    element_t* menubutton = textelement_alloc("menubutton", width - 300.0 * scale, 0.0 * scale, 140 * scale, 40.0 * scale, str_frombytes("Menu"), NULL, defaults.font, textstyle);
 
-    mtmap_put(view.uielements, "hudbar", hudbar);
-    mtmap_put(view.uielements, "levelbar", levelbar);
-    mtmap_put(view.uielements, "leveltext", leveltext);
+    MPUT(view.uielements, "hudbar", hudbar);
+    MPUT(view.uielements, "levelbar", levelbar);
+    MPUT(view.uielements, "leveltext", leveltext);
 
     hudbar->autosize.bottommargin    = 0.1;
     hudbar->autosize.keepxcenter     = 1;
@@ -265,15 +266,15 @@ void view_init_hud(textstyle_t textstyle)
     element_addsubelement(view.uibase, levelbar);
     element_addsubelement(view.uibase, menubutton);
 
-    mtmem_releaseeach(hudbar, levelbar, leveltext, menubutton, NULL);
+    mem_release_each(hudbar, levelbar, leveltext, menubutton, NULL);
 
     textstyle_t bulletstyle = textstyle;
     bulletstyle.align       = 1;
     bulletstyle.marginsize  = 0.0;
 
-    element_t* bullettext = textelement_alloc("bullettext", hudbar->width / 2.0 - 20.0 * scale, 0, 40 * scale, 40 * scale, mtstr_frombytes("0"), NULL, defaults.font, bulletstyle);
+    element_t* bullettext = textelement_alloc("bullettext", hudbar->width / 2.0 - 20.0 * scale, 0, 40 * scale, 40 * scale, str_frombytes("0"), NULL, defaults.font, bulletstyle);
 
-    mtmap_put(view.uielements, "bullettext", bullettext);
+    MPUT(view.uielements, "bullettext", bullettext);
     element_addsubelement(hudbar, bullettext);
 }
 
@@ -300,17 +301,17 @@ void view_init_generator(textstyle_t textstyle)
     paramsbox->autosize.keepxcenter = 1;
 
     element_t* hitpowerbar  = sliderelement_alloc("hitpowerbar", 0 * scale, 2 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* hitpowertext = textelement_alloc("hitpowertext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, mtstr_frombytes("Hitpower"), NULL, defaults.font, textstyle);
+    element_t* hitpowertext = textelement_alloc("hitpowertext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Hitpower"), NULL, defaults.font, textstyle);
     element_t* hitratebar   = sliderelement_alloc("hitratebar", 0 * scale, 44 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* hitratetext  = textelement_alloc("hitratetext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, mtstr_frombytes("Hitrate"), NULL, defaults.font, textstyle);
+    element_t* hitratetext  = textelement_alloc("hitratetext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Hitrate"), NULL, defaults.font, textstyle);
     element_t* heightbar    = sliderelement_alloc("heightbar", 202 * scale, 2 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* heighttext   = textelement_alloc("heighttext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, mtstr_frombytes("Height"), NULL, defaults.font, textstyle);
+    element_t* heighttext   = textelement_alloc("heighttext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Height"), NULL, defaults.font, textstyle);
     element_t* staminabar   = sliderelement_alloc("staminabar", 404 * scale, 2 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* staminatext  = textelement_alloc("staminatext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, mtstr_frombytes("Stamina"), NULL, defaults.font, textstyle);
+    element_t* staminatext  = textelement_alloc("staminatext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Stamina"), NULL, defaults.font, textstyle);
     element_t* speedbar     = sliderelement_alloc("speedbar", 404 * scale, 44 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* speedtext    = textelement_alloc("speedtext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, mtstr_frombytes("Speed"), NULL, defaults.font, textstyle);
-    element_t* randombutton = textelement_alloc("randombutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, mtstr_frombytes("Randomize"), NULL, defaults.font, greenstyle);
-    element_t* startbutton  = textelement_alloc("startbutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, mtstr_frombytes("Start Game"), NULL, defaults.font, redstyle);
+    element_t* speedtext    = textelement_alloc("speedtext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Speed"), NULL, defaults.font, textstyle);
+    element_t* randombutton = textelement_alloc("randombutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Randomize"), NULL, defaults.font, greenstyle);
+    element_t* startbutton  = textelement_alloc("startbutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Start Game"), NULL, defaults.font, redstyle);
 
     randombutton->autosize.keepxcenter  = 1;
     randombutton->autosize.bottommargin = 100.0 * scale;
@@ -338,18 +339,18 @@ void view_init_generator(textstyle_t textstyle)
     element_addsubelement(paramsbox, staminabar);
     element_addsubelement(paramsbox, speedbar);
 
-    mtmap_put(view.uielements, "hitpowerbar", hitpowerbar);
-    mtmap_put(view.uielements, "hitratebar", hitratebar);
-    mtmap_put(view.uielements, "heightbar", heightbar);
-    mtmap_put(view.uielements, "staminabar", staminabar);
-    mtmap_put(view.uielements, "speedbar", speedbar);
+    MPUT(view.uielements, "hitpowerbar", hitpowerbar);
+    MPUT(view.uielements, "hitratebar", hitratebar);
+    MPUT(view.uielements, "heightbar", heightbar);
+    MPUT(view.uielements, "staminabar", staminabar);
+    MPUT(view.uielements, "speedbar", speedbar);
 
     element_addsubelement(paramelement, paramsbox);
     element_addsubelement(paramelement, randombutton);
     element_addsubelement(paramelement, startbutton);
 
     element_addsubelement(view.uibase, paramelement);
-    mtmap_put(view.uielements, "paramelement", paramelement);
+    MPUT(view.uielements, "paramelement", paramelement);
 }
 
 void view_init_menu(textstyle_t textstyle)
@@ -410,7 +411,7 @@ void view_init_menu(textstyle_t textstyle)
     mainelement->autosize.fillx = 1;
     mainelement->autosize.filly = 1;
 
-    mtmap_put(view.uielements, "menuelement", mainelement);
+    MPUT(view.uielements, "menuelement", mainelement);
 
     menuitem_t optsitems[13] =
     {
@@ -465,7 +466,7 @@ void view_init_menu(textstyle_t textstyle)
     optselement->autosize.fillx = 1;
     optselement->autosize.filly = 1;
 
-    mtmap_put(view.uielements, "optselement", optselement);
+    MPUT(view.uielements, "optselement", optselement);
 }
 
 void view_init_donations()
@@ -527,7 +528,7 @@ void view_init_donations()
     dntselement->autosize.fillx = 1;
     dntselement->autosize.filly = 1;
 
-    mtmap_put(view.uielements, "dntselement", dntselement);
+    MPUT(view.uielements, "dntselement", dntselement);
 
     input_t resizeinput  = {0};
     resizeinput.floata   = defaults.width;
@@ -550,7 +551,7 @@ void view_init_tip(textstyle_t textstyle)
     float width  = defaults.width;
     float height = defaults.height;
 
-    mtstr_t* str = mtstr_frombytes("INFO");
+    str_t* str = str_frombytes("INFO");
 
     element_t* tipelement = solidelement_alloc("tipelement", 0, 0, width, height, 0);
     element_t* tiptext    = textelement_alloc("tiptext", 0, 100.0, width, 100, str, NULL, defaults.font, textstyle);
@@ -564,10 +565,10 @@ void view_init_tip(textstyle_t textstyle)
 
     tiptext->autosize.fillx = 1;
 
-    mtmap_put(view.uielements, "tiptext", tiptext);
-    mtmap_put(view.uielements, "tipelement", tipelement);
+    MPUT(view.uielements, "tiptext", tiptext);
+    MPUT(view.uielements, "tipelement", tipelement);
 
-    mtmem_releaseeach(tipelement, tiptext, NULL);
+    mem_release_each(tipelement, tiptext, NULL);
 }
 
 void view_init_wasted(textstyle_t textstyle)
@@ -582,9 +583,9 @@ void view_init_wasted(textstyle_t textstyle)
     float width  = defaults.width;
     float height = defaults.height;
 
-    mtstr_t* infostr    = mtstr_frombytes("Info");
-    mtstr_t* wastedstr  = mtstr_frombytes("Wasted");
-    mtstr_t* restartstr = mtstr_frombytes("Restart");
+    str_t* infostr    = str_frombytes("Info");
+    str_t* wastedstr  = str_frombytes("Wasted");
+    str_t* restartstr = str_frombytes("Restart");
 
     element_t* wastedelement = solidelement_alloc("wastedelement", 0, 0, width, height, 0xAA0000CC);
     element_t* wastedinfo    = textelement_alloc("wastedinfo", 0, 50.0, width, 40, infostr, NULL, defaults.font, textstyle);
@@ -608,10 +609,10 @@ void view_init_wasted(textstyle_t textstyle)
     wastedbutton->autosize.fillx        = 1;
     wastedbutton->autosize.bottommargin = 50.0 * scale;
 
-    mtmap_put(view.uielements, "wastedinfo", wastedinfo);
-    mtmap_put(view.uielements, "wastedelement", wastedelement);
+    MPUT(view.uielements, "wastedinfo", wastedinfo);
+    MPUT(view.uielements, "wastedelement", wastedelement);
 
-    mtmem_releaseeach(wastedelement, wastedinfo, wastedtext, wastedbutton, infostr, wastedstr, NULL);
+    mem_release_each(wastedelement, wastedinfo, wastedtext, wastedbutton, infostr, wastedstr, NULL);
 }
 
 void view_init_finished(textstyle_t textstyle)
@@ -627,8 +628,8 @@ void view_init_finished(textstyle_t textstyle)
     textstyle_t lightgreenstyle = textstyle;
     lightgreenstyle.backcolor   = 0x00AA0044;
 
-    mtstr_t* completedstr = mtstr_frombytes("Level Completed");
-    mtstr_t* nextstr      = mtstr_frombytes("Next Level");
+    str_t* completedstr = str_frombytes("Level Completed");
+    str_t* nextstr      = str_frombytes("Next Level");
 
     element_t* finishedelement = solidelement_alloc("finishedelement", 0, 0, width, height, 0x00FF00CC);
     element_t* finishedtext    = textelement_alloc("finishedtext", 0, 0, width, 150, completedstr, NULL, defaults.font, lightgreenstyle);
@@ -648,9 +649,9 @@ void view_init_finished(textstyle_t textstyle)
     finishedbutton->autosize.fillx        = 1;
     finishedbutton->autosize.bottommargin = 50.0 * scale;
 
-    mtmap_put(view.uielements, "finishedelement", finishedelement);
+    MPUT(view.uielements, "finishedelement", finishedelement);
 
-    mtmem_releaseeach(finishedelement, finishedtext, finishedbutton, completedstr, nextstr, NULL);
+    mem_release_each(finishedelement, finishedtext, finishedbutton, completedstr, nextstr, NULL);
 }
 
 void view_init_completed(textstyle_t textstyle)
@@ -678,9 +679,9 @@ void view_init_completed(textstyle_t textstyle)
     textstyle_t lightgreenstyle = textstyle;
     lightgreenstyle.backcolor   = 0x00AA0044;
 
-    mtstr_t* gamestr    = mtstr_frombytes("Game Completed");
-    mtstr_t* resetstr   = mtstr_frombytes("Reset and Restart");
-    mtstr_t* restartstr = mtstr_frombytes("Restart");
+    str_t* gamestr    = str_frombytes("Game Completed");
+    str_t* resetstr   = str_frombytes("Reset and Restart");
+    str_t* restartstr = str_frombytes("Restart");
 
     element_t* completedelement       = solidelement_alloc("completedelement", 0, 0, width, height, 0x0000FFCC);
     element_t* completedtext          = textelement_alloc("completedtext", 0, 0, width, 150, gamestr, NULL, defaults.font, lightbluestyle);
@@ -706,9 +707,9 @@ void view_init_completed(textstyle_t textstyle)
     completedresetbutton->autosize.fillx        = 1;
     completedresetbutton->autosize.bottommargin = 50.0 * scale;
 
-    mtmap_put(view.uielements, "completedelement", completedelement);
+    MPUT(view.uielements, "completedelement", completedelement);
 
-    mtmem_releaseeach(completedelement, completedtext, completedresetbutton, completedrestartbutton, gamestr, restartstr, resetstr, NULL);
+    mem_release_each(completedelement, completedtext, completedresetbutton, completedrestartbutton, gamestr, restartstr, resetstr, NULL);
 }
 
 /* updates actor generator bars */
@@ -722,11 +723,11 @@ void view_updategenerator()
     input.scale    = defaults.scale;
     input.cmdqueue = view.cmdqueue;
 
-    element_t* speedbar    = mtmap_get(view.uielements, "speedbar");
-    element_t* heightbar   = mtmap_get(view.uielements, "heightbar");
-    element_t* staminabar  = mtmap_get(view.uielements, "staminabar");
-    element_t* hitratebar  = mtmap_get(view.uielements, "hitratebar");
-    element_t* hitpowerbar = mtmap_get(view.uielements, "hitpowerbar");
+    element_t* speedbar    = MGET(view.uielements, "speedbar");
+    element_t* heightbar   = MGET(view.uielements, "heightbar");
+    element_t* staminabar  = MGET(view.uielements, "staminabar");
+    element_t* hitratebar  = MGET(view.uielements, "hitratebar");
+    element_t* hitpowerbar = MGET(view.uielements, "hitpowerbar");
 
     sliderelement_setratio(speedbar, &input, view.hero_metrics.speed);
     sliderelement_setratio(heightbar, &input, view.hero_metrics.height);
@@ -817,7 +818,7 @@ void view_free(void)
 
 void view_addbubble(input_t* input)
 {
-    // element_t* textbubble = textelement_alloc( "textbubble", 0, 0 , 300, 50, greenstyle, defaults.font, mtstr_frombytes("TEXT BUBBLE"), NULL, 0.0 );
+    // element_t* textbubble = textelement_alloc( "textbubble", 0, 0 , 300, 50, greenstyle, defaults.font, str_frombytes("TEXT BUBBLE"), NULL, 0.0 );
 }
 
 /* add level bar over actor */
@@ -841,15 +842,15 @@ void view_resize()
     element_t* dntsel;
     element_t* hudbar;
 
-    hudbar = mtmap_get(view.uielements, "hudbar");
-    tipsel = mtmap_get(view.uielements, "tipelement");
-    menuel = mtmap_get(view.uielements, "menuelement");
-    optsel = mtmap_get(view.uielements, "optselement");
-    dntsel = mtmap_get(view.uielements, "dntselement");
-    parmel = mtmap_get(view.uielements, "paramelement");
-    wstdel = mtmap_get(view.uielements, "wastedelement");
-    fnshel = mtmap_get(view.uielements, "finishedelement");
-    cmplel = mtmap_get(view.uielements, "completedelement");
+    hudbar = MGET(view.uielements, "hudbar");
+    tipsel = MGET(view.uielements, "tipelement");
+    menuel = MGET(view.uielements, "menuelement");
+    optsel = MGET(view.uielements, "optselement");
+    dntsel = MGET(view.uielements, "dntselement");
+    parmel = MGET(view.uielements, "paramelement");
+    wstdel = MGET(view.uielements, "wastedelement");
+    fnshel = MGET(view.uielements, "finishedelement");
+    cmplel = MGET(view.uielements, "completedelement");
 
     input_t resizeinput  = {0};
     resizeinput.floata   = defaults.width;
@@ -884,7 +885,7 @@ void view_updatemenu()
     input.scale    = defaults.scale;
     input.cmdqueue = view.cmdqueue;
 
-    element_t* optselement = mtmap_get(view.uielements, "optselement");
+    element_t* optselement = MGET(view.uielements, "optselement");
 
     element_t* musicelement    = optselement->subelements->data[0];
     element_t* soundelement    = optselement->subelements->data[1];
@@ -1015,8 +1016,8 @@ void view_timer()
 
     actor_t* actor = scene.herogroup->actor;
 
-    element_t* hudbar   = mtmap_get(view.uielements, "hudbar");
-    element_t* levelbar = mtmap_get(view.uielements, "levelbar");
+    element_t* hudbar   = MGET(view.uielements, "hudbar");
+    element_t* levelbar = MGET(view.uielements, "levelbar");
 
     element_t* healthbar = hudbar->subelements->data[0];
     element_t* powerbar  = hudbar->subelements->data[1];
@@ -1041,17 +1042,19 @@ void view_updateskill()
 
     int skill = actor->metrics.level;
 
-    element_t* leveltext = mtmap_get(view.uielements, "leveltext");
+    element_t* leveltext = MGET(view.uielements, "leveltext");
 
     char text[3];
 
     snprintf(text, 3, "%i", skill);
 
-    mtstr_t* texts = mtstr_fromformat("Skill %s", text, NULL);
+    char*  textcs = cstr_new_format(100, "Skill %s", text, NULL);
+    str_t* texts  = str_new();
+    str_add_bytearray(texts, textcs);
 
     textelement_settext(leveltext, defaults.font, view.cmdqueue, texts);
 
-    mtmem_release(texts);
+    REL(texts);
 }
 
 /* set alpha of controls */
@@ -1065,7 +1068,7 @@ void view_setcontrolalpha(float alpha)
     uint8_t  newalpha = (uint8_t) ((float) 125 * alpha);
     uint32_t color    = (0xFFFFFF << 8) | newalpha;
 
-    element_t* controlbase = mtmap_get(view.uielements, "controlsbase");
+    element_t* controlbase = MGET(view.uielements, "controlsbase");
 
     for (int index = 0;
 	 index < controlbase->subelements->length;
@@ -1083,7 +1086,7 @@ void view_setcontrolalpha(float alpha)
 void view_showelement(char* name)
 {
 
-    element_t* element = mtmap_get(view.uielements, name);
+    element_t* element = MGET(view.uielements, name);
 
     if (element != NULL)
     {
@@ -1096,7 +1099,7 @@ void view_showelement(char* name)
 void view_hideelement(char* name)
 {
 
-    element_t* element = mtmap_get(view.uielements, name);
+    element_t* element = MGET(view.uielements, name);
 
     if (element != NULL)
     {
@@ -1106,14 +1109,14 @@ void view_hideelement(char* name)
 
 /* shows wasted */
 
-void view_showwasted(mtstr_t* text)
+void view_showwasted(str_t* text)
 {
 
     element_t* textel;
     element_t* baseel;
 
-    textel = mtmap_get(view.uielements, "wastedinfo");
-    baseel = mtmap_get(view.uielements, "wastedelement");
+    textel = MGET(view.uielements, "wastedinfo");
+    baseel = MGET(view.uielements, "wastedelement");
 
     textelement_settext(textel, defaults.font, view.cmdqueue, text);
 
@@ -1131,8 +1134,8 @@ void view_showtip(char* text)
     element_t* textel;
     element_t* baseel;
 
-    textel = mtmap_get(view.uielements, "tiptext");
-    baseel = mtmap_get(view.uielements, "tipelement");
+    textel = MGET(view.uielements, "tiptext");
+    baseel = MGET(view.uielements, "tipelement");
 
     if (strcmp(text, "Pivot_i1") == 0)
     {
@@ -1159,7 +1162,7 @@ void view_showtip(char* text)
 	text = "To pick up stuff after the third level please donate from the main menu.";
     }
 
-    mtstr_t* str = mtstr_frombytes(text);
+    str_t* str = str_frombytes(text);
 
     textelement_settext(textel, defaults.font, view.cmdqueue, str);
 
@@ -1177,7 +1180,7 @@ void view_showtip(char* text)
 void view_activate()
 {
 
-    mtvec_reset(view.ui->visible);
+    vec_reset(view.ui->visible);
 
     element_collectelements(view.uibase, v2_init(0.0, 0.0), view.ui->visible);
 
@@ -1286,14 +1289,14 @@ void scene_setmusicvolume(input_t* input, element_t* element)
 {
 
     float ratio = sliderelement_getratio(element);
-    mtbus_notify("SND", "MUSICVOLUME", &ratio);
+    bus_notify("SND", "MUSICVOLUME", &ratio);
 }
 
 void scene_setsoundvolume(input_t* input, element_t* element)
 {
 
     float ratio = sliderelement_getratio(element);
-    mtbus_notify("SND", "SOUNDVOLUME", &ratio);
+    bus_notify("SND", "SOUNDVOLUME", &ratio);
 }
 
 void scene_setzoomratio(input_t* input, element_t* element)
@@ -1342,7 +1345,7 @@ void view_input(input_t* input)
 	    // main menu
 	    else if (strcmp(command->name, "homepage") == 0)
 	    {
-		mtbus_notify("CTL", "HOMEPAGE", NULL);
+		bus_notify("CTL", "HOMEPAGE", NULL);
 	    }
 	    else if (strcmp(command->name, "continue") == 0)
 	    {
@@ -1359,7 +1362,7 @@ void view_input(input_t* input)
 		view_showelement("paramelement");
 		view_randomizemetrics();
 		view_removebubbles();
-		mtbus_notify("CTL", "RESETGAME", NULL);
+		bus_notify("CTL", "RESETGAME", NULL);
 	    }
 	    else if (strcmp(command->name, "options") == 0)
 	    {
@@ -1371,12 +1374,12 @@ void view_input(input_t* input)
 		if (defaults.prices_arrived == 1)
 		{
 #ifdef RASPBERRY
-		    mtbus_notify("CTL", "DONATE", defaults.prices[0]);
+		    bus_notify("CTL", "DONATE", defaults.prices[0]);
 		    view_hideelement((char*) "optselement");
 		    view_hideelement((char*) "dntselement");
 		    view_showelement((char*) "menuelement");
 #else
-		    element_t* dntselement = mtmap_get(view.uielements, "donselement");
+		    element_t* dntselement = MGET(view.uielements, "donselement");
 		    if (dntselement == NULL) view_init_donations();
 		    view_hideelement((char*) "menuelement");
 		    view_showelement((char*) "dntselement");
@@ -1385,28 +1388,28 @@ void view_input(input_t* input)
 	    }
 	    else if (strcmp(command->name, "donate_a") == 0)
 	    {
-		mtbus_notify("CTL", "DONATE", defaults.prices[0]);
+		bus_notify("CTL", "DONATE", defaults.prices[0]);
 		view_hideelement((char*) "optselement");
 		view_hideelement((char*) "dntselement");
 		view_showelement((char*) "menuelement");
 	    }
 	    else if (strcmp(command->name, "donate_b") == 0)
 	    {
-		mtbus_notify("CTL", "DONATE", defaults.prices[1]);
+		bus_notify("CTL", "DONATE", defaults.prices[1]);
 		view_hideelement((char*) "optselement");
 		view_hideelement((char*) "dntselement");
 		view_showelement((char*) "menuelement");
 	    }
 	    else if (strcmp(command->name, "donate_c") == 0)
 	    {
-		mtbus_notify("CTL", "DONATE", defaults.prices[2]);
+		bus_notify("CTL", "DONATE", defaults.prices[2]);
 		view_hideelement((char*) "optselement");
 		view_hideelement((char*) "dntselement");
 		view_showelement((char*) "menuelement");
 	    }
 	    else if (strcmp(command->name, "exit") == 0)
 	    {
-		mtbus_notify("CTL", "EXIT", NULL);
+		bus_notify("CTL", "EXIT", NULL);
 	    }
 	    // options
 	    else if (strcmp(command->name, "soundvol") == 0)
@@ -1431,7 +1434,7 @@ void view_input(input_t* input)
 	    }
 	    else if (strcmp(command->name, "fullscreen") == 0)
 	    {
-		mtbus_notify("CTL", "FULLSCREEN", NULL);
+		bus_notify("CTL", "FULLSCREEN", NULL);
 	    }
 	    else if (strcmp(command->name, "back") == 0)
 	    {
@@ -1463,7 +1466,7 @@ void view_input(input_t* input)
 		view_hideelement((char*) "completedelement");
 		view_removebubbles();
 		view_activate();
-		mtbus_notify("CTL", "RESTARTGAME", NULL);
+		bus_notify("CTL", "RESTARTGAME", NULL);
 	    }
 	    else if (strcmp(command->name, "resetlevel") == 0)
 	    {
@@ -1472,7 +1475,7 @@ void view_input(input_t* input)
 		view_hideelement((char*) "finishedelement");
 		view_removebubbles();
 		view_activate();
-		mtbus_notify("CTL", "RESETLEVEL", NULL);
+		bus_notify("CTL", "RESETLEVEL", NULL);
 	    }
 	    else if (strcmp(command->name, "nextlevel") == 0)
 	    {
@@ -1481,7 +1484,7 @@ void view_input(input_t* input)
 		view_hideelement((char*) "finishedelement");
 		view_removebubbles();
 		view_activate();
-		mtbus_notify("CTL", "NEXTLEVEL", NULL);
+		bus_notify("CTL", "NEXTLEVEL", NULL);
 	    }
 	    // actor generator
 	    else if (strcmp(command->name, "updatemetrics") == 0)
@@ -1586,7 +1589,7 @@ void view_onmessage(const char* name, void* data)
     else if (strcmp(name, "SHOWWASTED") == 0)
     {
 
-	view_showwasted((mtstr_t*) data);
+	view_showwasted((str_t*) data);
 	view_activate();
     }
     else if (strcmp(name, "SHOWTIP") == 0)
@@ -1615,17 +1618,17 @@ void view_onmessage(const char* name, void* data)
 	actor_group_t* group = data;
 	gun_t*         gun   = group->gun;
 
-	element_t* bullettext = mtmap_get(view.uielements, "bullettext");
+	element_t* bullettext = MGET(view.uielements, "bullettext");
 
 	char intstring[2] = {0};
 
 	snprintf(intstring, 2, "%i", gun->bullets);
 
-	mtstr_t* text = mtstr_frombytes(intstring);
+	str_t* text = str_frombytes(intstring);
 
 	textelement_settext(bullettext, defaults.font, view.cmdqueue, text);
 
-	mtmem_release(text);
+	REL(text);
     }
 }
 

@@ -3,7 +3,7 @@
 #define defaults_h
 
 #include "font.c"
-#include "mtcstr.c"
+#include "zc_cstring.c"
 #include <stdlib.h>
 
 typedef struct _defaults_t
@@ -57,8 +57,8 @@ defaults_t defaults = {0};
 void defaults_init(char* libpath, char* respath)
 {
 
-    defaults.libpath = mtcstr_fromcstring(libpath);
-    defaults.respath = mtcstr_fromcstring(respath);
+    defaults.libpath = cstr_new_cstring(libpath);
+    defaults.respath = cstr_new_cstring(respath);
 
     settings_init(libpath, (char*) "brawl.state");
 
@@ -103,7 +103,7 @@ void defaults_init(char* libpath, char* respath)
 void defaults_free()
 {
 
-    mtmem_release(defaults.font);
+    REL(defaults.font);
 }
 
 void defaults_reset()

@@ -3,18 +3,18 @@
 #ifndef ui_h
 #define ui_h
 
-#include "mtvec.c"
-#include "math2.c"
 #include "element.h"
+#include "zc_util2.c"
+#include "zc_vector.c"
 
 typedef struct _uitouch_t
 {
-    char     swiped;
-    char*    id;
-    mtvec_t* views;
-    v2_t     start;
-    v2_t     actual;
-    v2_t     last;
+    char   swiped;
+    char*  id;
+    vec_t* views;
+    v2_t   start;
+    v2_t   actual;
+    v2_t   last;
 
 } uitouch_t;
 
@@ -22,12 +22,12 @@ uitouch_t* uitouch_alloc(char* id, v2_t start);
 
 typedef struct _ui_t
 {
-    mtmap_t* touches;
-    mtvec_t* timed;
-    mtvec_t* visible;
-    mtvec_t* focused;
-    mtvec_t* zoomed;
-    mtvec_t* scrolled;
+    map_t* touches;
+    vec_t* timed;
+    vec_t* visible;
+    vec_t* focused;
+    vec_t* zoomed;
+    vec_t* scrolled;
 
     float swipedist;
 

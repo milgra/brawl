@@ -9,6 +9,7 @@
 #ifndef _scene_header
 #define _scene_header
 
+#include <linux/limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,9 +31,10 @@
 
 #include "element.h"
 #include "floatbuffer.c"
-#include "mtcstr.c"
 #include "textelement.h"
 #include "triangulate.c"
+#include "zc_cstring.c"
+#include "zc_memory.c"
 
 #define kSceneStateAlive 0
 #define kSceneStateDead 1
@@ -71,11 +73,11 @@ struct _scene_t
     v2_t lefttop2world;
     v2_t rightbtm2world;
 
-    mtvec_t* guns;
-    mtvec_t* tips;
-    mtvec_t* bloods;
-    mtvec_t* actors;
-    mtvec_t* debuglines;
+    vec_t* guns;
+    vec_t* tips;
+    vec_t* bloods;
+    vec_t* actors;
+    vec_t* debuglines;
 
     v2_t        endpoint;
     surfaces_t* surfaces;
@@ -125,11 +127,11 @@ void scene_init()
     scene.lefttop2world     = v2_init(0.0, 0.0);
     scene.rightbtm2world    = v2_init(defaults.width, defaults.height);
 
-    scene.guns       = mtvec_alloc();
-    scene.tips       = mtvec_alloc();
-    scene.bloods     = mtvec_alloc();
-    scene.actors     = mtvec_alloc();
-    scene.debuglines = mtvec_alloc();
+    scene.guns       = VNEW();
+    scene.tips       = VNEW();
+    scene.bloods     = VNEW();
+    scene.actors     = VNEW();
+    scene.debuglines = VNEW();
 
     scene.endpoint = v2_init(0.0, 0.0);
     scene.surfaces = surfaces_alloc(100, 100.0);
@@ -153,7 +155,7 @@ void scene_init()
 
     /* subscribe to scene channel */
 
-    mtbus_subscribe("SCN", scene_onmessage);
+    bus_subscribe("SCN", scene_onmessage);
 
     /* init hero */
 
@@ -178,19 +180,19 @@ void scene_init()
 void scene_free(void)
 {
 
-    mtmem_release(scene.herogroup);
-    mtmem_release(scene.enemygroup);
+    REL(scene.herogroup);
+    REL(scene.enemygroup);
 
     scenerenderer_free();
 
-    mtmem_release(scene.cmdqueue);
-    mtmem_release(scene.vertexbuffer);
+    REL(scene.cmdqueue);
+    REL(scene.vertexbuffer);
 
-    mtmem_release(scene.tips);
-    mtmem_release(scene.bloods);
-    mtmem_release(scene.actors);
-    mtmem_release(scene.surfaces);
-    mtmem_release(scene.debuglines);
+    REL(scene.tips);
+    REL(scene.bloods);
+    REL(scene.actors);
+    REL(scene.surfaces);
+    REL(scene.debuglines);
 }
 
 /* reset level */
@@ -198,10 +200,10 @@ void scene_free(void)
 void scene_reset()
 {
 
-    mtvec_reset(scene.guns);
-    mtvec_reset(scene.bloods);
-    mtvec_reset(scene.actors);
-    mtvec_reset(scene.debuglines);
+    vec_reset(scene.guns);
+    vec_reset(scene.bloods);
+    vec_reset(scene.actors);
+    vec_reset(scene.debuglines);
 
     surfaces_reset(scene.surfaces);
 
@@ -210,7 +212,7 @@ void scene_reset()
     hero->power  = hero->metrics.maxpower;
     hero->health = hero->metrics.maxhealth;
 
-    mtvec_addatindex(scene.actors, scene.herogroup, 0);
+    vec_ins(scene.actors, scene.herogroup, 0);
 }
 
 /* load level */
@@ -223,7 +225,7 @@ void scene_load(int levelindex)
     if (levelindex > 0)
     {
 
-	mtbus_notify("SND", "PLAYMUSIC", NULL);
+	bus_notify("SND", "PLAYMUSIC", NULL);
     }
 
     scene_reset();
@@ -234,17 +236,17 @@ void scene_load(int levelindex)
 
     snprintf(num, 2, "%i", levelindex);
 
-    char* paths     = mtcstr_fromformat("%s/level%s.svg", defaults.respath, num, NULL);
-    char* namespath = mtcstr_fromformat("%s/names.txt", defaults.respath, num, NULL);
+    char* paths     = cstr_new_format(PATH_MAX, "%s/level%s.svg", defaults.respath, num, NULL);
+    char* namespath = cstr_new_format(PATH_MAX, "%s/names.txt", defaults.respath, num, NULL);
 
-    mtvec_t* scene_pivots = mtvec_alloc();
-    mtvec_t* scene_names  = mtfile_readlines(namespath);
+    vec_t* scene_pivots = VNEW();
+    vec_t* scene_names  = mtfile_readlines(namespath);
 
     NSVGpath*  spath;
     NSVGshape* shape;
     NSVGimage* image = nsvgParseFromFile(paths, "pt", 30);
 
-    mtmem_releaseeach(paths, namespath, NULL);
+    mem_release_each(paths, namespath, NULL);
 
     /* iterate through all shapes three times to render background differently for movement */
 
@@ -264,13 +266,13 @@ void scene_load(int levelindex)
 		if (spath->closed == 1 && strstr(shape->id, "Pivot") == NULL)
 		{
 
-		    mtvec_t* pointlist = mtvec_alloc();
-		    mtvec_t* triangles = mtvec_alloc();
+		    vec_t* pointlist = VNEW();
+		    vec_t* triangles = VNEW();
 
 		    for (int i = 0; i < spath->npts; i += 3)
 		    {
 
-			v2_t* point = mtmem_alloc(sizeof(v2_t), NULL);
+			v2_t* point = CAL(sizeof(v2_t), NULL, NULL);
 
 			point->x = spath->pts[i * 2];
 			point->y = -spath->pts[i * 2 + 1];
@@ -278,11 +280,11 @@ void scene_load(int levelindex)
 			point->x += -1.0 + (float) (rand() % 20) / 10.0;
 			point->y += -1.0 + (float) (rand() % 20) / 10.0;
 
-			mtvec_add(pointlist, point);
-			mtmem_release(point);
+			VADD(pointlist, point);
+			REL(point);
 		    }
 
-		    mtvec_removeatindex(pointlist, pointlist->length - 1);
+		    vec_rem_at_index(pointlist, pointlist->length - 1);
 		    triangulate_process(pointlist, triangles);
 
 		    /* add vertexes to floatbuffer */
@@ -304,8 +306,8 @@ void scene_load(int levelindex)
 			floatbuffer_add(scene.vertexbuffer, cf);
 		    }
 
-		    mtmem_release(triangles);
-		    mtmem_release(pointlist);
+		    REL(triangles);
+		    REL(pointlist);
 		}
 	    }
 	}
@@ -315,7 +317,7 @@ void scene_load(int levelindex)
 		.buffer = scene.vertexbuffer,
 		.layer  = step};
 
-	mtbus_notify("RND", "UPDBUFF", &data);
+	bus_notify("RND", "UPDBUFF", &data);
     }
 
     /* create surfaces */
@@ -326,25 +328,25 @@ void scene_load(int levelindex)
 	for (spath = shape->paths; spath != NULL; spath = spath->next)
 	{
 
-	    mtvec_t* pointlist = mtvec_alloc();
+	    vec_t* pointlist = VNEW();
 
 	    for (int i = 0; i < spath->npts; i += 3)
 	    {
 
-		v2_t* point = mtmem_alloc(sizeof(v2_t), NULL);
+		v2_t* point = CAL(sizeof(v2_t), NULL, NULL);
 		point->x    = spath->pts[i * 2];
 		point->y    = -spath->pts[i * 2 + 1];
 
-		mtvec_add(pointlist, point);
-		mtmem_release(point);
+		VADD(pointlist, point);
+		REL(point);
 	    }
 
 	    if (strstr(shape->id, "Pivot") != NULL)
 	    {
 
 		pivot_t* pivot = pivot_alloc(shape->id, v2_init(spath->pts[0], -spath->pts[1]));
-		mtvec_add(scene_pivots, pivot);
-		mtmem_release(pivot);
+		VADD(scene_pivots, pivot);
+		REL(pivot);
 	    }
 
 	    /* !!! egyszerusiteni ezeket a dolgokat */
@@ -360,21 +362,21 @@ void scene_load(int levelindex)
 		    if (lastpoint != NULL)
 		    {
 
-			segment2_t* wall = mtmem_alloc(sizeof(segment2_t), NULL);
+			segment2_t* wall = CAL(sizeof(segment2_t), NULL, NULL);
 			wall->trans      = *(lastpoint);
 			wall->basis      = v2_sub(*point, *lastpoint);
 
-			mtvec_add(scene.debuglines, wall);
+			VADD(scene.debuglines, wall);
 			surfaces_addsegment(scene.surfaces, wall);
 
-			mtmem_release(wall);
+			REL(wall);
 		    }
 
 		    lastpoint = point;
 		}
 	    }
 
-	    mtmem_release(pointlist);
+	    REL(pointlist);
 	}
     }
 
@@ -435,13 +437,13 @@ void scene_load(int levelindex)
 	    {
 
 		gun_t* gun = gun_alloc(pivot->position, v2_init(10.0, 0.0));
-		mtvec_add(scene.guns, gun);
-		mtmem_release(gun);
+		VADD(scene.guns, gun);
+		REL(gun);
 	    }
 	    else if (isinfo == 1)
 	    {
 
-		mtvec_add(scene.tips, pivot);
+		VADD(scene.tips, pivot);
 	    }
 	    else
 	    {
@@ -455,7 +457,8 @@ void scene_load(int levelindex)
 			.cmdqueue = scene.cmdqueue,
 		    };
 
-		REL(scene.herogroup->gun);
+		if (scene.herogroup->gun)
+		    REL(scene.herogroup->gun);
 		scene.herogroup->gun = NULL;
 
 		actor_reset(scene.herogroup->actor, pivot->position, &args);
@@ -523,21 +526,21 @@ void scene_load(int levelindex)
 
 		actor_reset(actor, newpos, &args);
 
-		mtvec_add(scene.actors, group);
+		VADD(scene.actors, group);
 
-		mtmem_release(group);
-		mtmem_release(actor);
-		mtmem_release(skin);
-		mtmem_release(ai);
-		mtmem_release(hud);
+		REL(group);
+		REL(actor);
+		REL(skin);
+		REL(ai);
+		REL(hud);
 	    }
 	}
     }
 
-    mtmem_release(scene_pivots);
-    mtmem_release(scene_names);
+    REL(scene_pivots);
+    REL(scene_names);
 
-    mtbus_notify("VIEW", "UPDATESKILL", NULL);
+    bus_notify("VIEW", "UPDATESKILL", NULL);
 }
 
 /* removes actor group from the game */
@@ -555,7 +558,7 @@ void scene_remove_actor(actor_t* actor)
 	if (group->actor == actor)
 	{
 
-	    mtvec_removeatindex(scene.actors, index);
+	    vec_rem_at_index(scene.actors, index);
 	    break;
 	}
     }
@@ -576,8 +579,8 @@ void scene_create_blood(attack_t* attack)
 	v2_t basis     = v2_add(attack->basis, direction);
 
 	blood_t* blood = blood_alloc(attack->trans, basis);
-	mtvec_add(scene.bloods, blood);
-	mtmem_release(blood);
+	VADD(scene.bloods, blood);
+	REL(blood);
     }
 }
 
@@ -585,8 +588,7 @@ void scene_create_blood(attack_t* attack)
 
 void scene_remove_blood(blood_t* blood)
 {
-
-    mtvec_remove(scene.bloods, blood);
+    VREM(scene.bloods, blood);
 }
 
 /* update projection */
@@ -648,7 +650,7 @@ void scene_follow_hero()
 
 /* default state */
 
-void scene_lines_from_segments(mtvec_t* segments, floatbuffer_t* vertexbuffer)
+void scene_lines_from_segments(vec_t* segments, floatbuffer_t* vertexbuffer)
 {
     float wcoords = ogl_color_float_from_rgbauint32(0xFFFFFFFF);
 
@@ -848,7 +850,7 @@ void scene_update(float delta)
 	.buffer = scene.vertexbuffer,
 	.layer  = 3};
 
-    mtbus_notify("RND", "UPDBUFF", &data);
+    bus_notify("RND", "UPDBUFF", &data);
 
     /* draw blood blood */
 
@@ -877,7 +879,7 @@ void scene_update(float delta)
 		.buffer = scene.vertexbuffer,
 		.layer  = 5};
 
-	mtbus_notify("RND", "UPDBUFF", &data);
+	bus_notify("RND", "UPDBUFF", &data);
     }
 
     if (defaults.debug_mode == 1)
@@ -905,7 +907,7 @@ void scene_update(float delta)
 	    .buffer = scene.vertexbuffer,
 	    .layer  = 5};
 
-	mtbus_notify("RND", "UPDBUFF", &data);
+	bus_notify("RND", "UPDBUFF", &data);
 
 	/* draw bones and forces */
 
@@ -933,7 +935,7 @@ void scene_update(float delta)
 	    .buffer = scene.vertexbuffer,
 	    .layer  = 4};
 
-	mtbus_notify("RND", "UPDBUFF", &data);
+	bus_notify("RND", "UPDBUFF", &data);
     }
     else
     {
@@ -945,11 +947,11 @@ void scene_update(float delta)
 	//				.layer = 5
 	//			};
 	//
-	//			mtbus_notify( "RND" , "UPDBUFF" , &data );
+	//			bus_notify( "RND" , "UPDBUFF" , &data );
 
 	data.layer = 4;
 
-	mtbus_notify("RND", "UPDBUFF", &data);
+	bus_notify("RND", "UPDBUFF", &data);
     }
 
     /* check info pivots */
@@ -965,8 +967,8 @@ void scene_update(float delta)
 	if (fabs(delta.x) < 100.0 && fabs(delta.y) < 100.0)
 	{
 
-	    mtbus_notify("VIEW", "SHOWTIP", pivot->id);
-	    mtvec_removeatindex(scene.tips, index);
+	    bus_notify("VIEW", "SHOWTIP", pivot->id);
+	    vec_rem_at_index(scene.tips, index);
 	    break;
 	}
     }
@@ -989,9 +991,9 @@ void scene_update(float delta)
 	    else if (strcmp(command->name, "scene.pickup") == 0) scene_pickup(command->data);
 	    else if (strcmp(command->name, "scene.removeactor") == 0) scene_remove_actor(command->data);
 	    else if (strcmp(command->name, "scene.removeblood") == 0) scene_remove_blood(command->data);
-	    else if (strcmp(command->name, "scene.showwasted") == 0) mtbus_notify("VIEW", "SHOWWASTED", command->data);
-	    else if (strcmp(command->name, "scene.showfinished") == 0) mtbus_notify("VIEW", "SHOWELEMENT", (char*) "finishedelement");
-	    else if (strcmp(command->name, "updateskill") == 0) mtbus_notify("VIEW", "UPDATESKILL", NULL);
+	    else if (strcmp(command->name, "scene.showwasted") == 0) bus_notify("VIEW", "SHOWWASTED", command->data);
+	    else if (strcmp(command->name, "scene.showfinished") == 0) bus_notify("VIEW", "SHOWELEMENT", (char*) "finishedelement");
+	    else if (strcmp(command->name, "updateskill") == 0) bus_notify("VIEW", "UPDATESKILL", NULL);
 	}
 	cmdqueue_reset(scene.cmdqueue);
     }
@@ -1070,7 +1072,7 @@ char scene_hit(attack_t* attack)
 		attack_t* bloodattack = attack_alloc(attack->actor, isp, v2_resize(attack->basis, 3.0), attack->power);
 
 		scene_create_blood(bloodattack);
-		mtmem_release(bloodattack);
+		REL(bloodattack);
 	    }
 
 	    for (uint32_t groupindex = 0; groupindex < scene.actors->length; groupindex++)
@@ -1086,18 +1088,18 @@ char scene_hit(attack_t* attack)
 		}
 	    }
 
-	    if (attack->power < 1000.0) mtbus_notify("SND", "PLAYSND", "hit");
+	    if (attack->power < 1000.0) bus_notify("SND", "PLAYSND", "hit");
 
 	    if (enemy->state == kActorStateDeath)
 	    {
 
-		mtbus_notify("SND", "PLAYSND", "death");
+		bus_notify("SND", "PLAYSND", "death");
 
 		float xpgain = (float) enemy->metrics.level * 50;
 
 		sender->metrics.xp += xpgain;
 
-		mtbus_notify("VIEW", "REMOVEHUD", group);
+		bus_notify("VIEW", "REMOVEHUD", group);
 
 		if (sender->metrics.xp >= 1000.0)
 		{
@@ -1115,7 +1117,7 @@ char scene_hit(attack_t* attack)
 	    else
 	    {
 
-		mtbus_notify("SND", "PLAYSND", "argh");
+		bus_notify("SND", "PLAYSND", "argh");
 	    }
 
 	    /* save enemy for enemybar/label */
@@ -1237,14 +1239,14 @@ void scene_shoot(attack_t* attack)
 		gun->bullets -= 1;
 		gun->shot = 1;
 
-		mtbus_notify("VIEW", "UPDATEBULLETS", group);
+		bus_notify("VIEW", "UPDATEBULLETS", group);
 
 		attack->basis = v2_init(actor->facing * 1000.0, 0.0);
 		// attack->power = 50.0;
 
 		gun->mass->basis = attack->basis;
 
-		mtbus_notify("SND", "PLAYSND", "shoot");
+		bus_notify("SND", "PLAYSND", "shoot");
 
 		char success = scene_hit(attack);
 
@@ -1266,7 +1268,7 @@ void scene_pickup(actor_t* actor)
 
     if (defaults.sceneindex > 3 && defaults.donation_arrived == 0)
     {
-	mtbus_notify("VIEW", "SHOWTIP", "PlsGive");
+	bus_notify("VIEW", "SHOWTIP", "PlsGive");
 	return;
     }
 
@@ -1348,7 +1350,7 @@ void scene_pickup(actor_t* actor)
 	{
 
 	    actor_group_setgun(group, gun);
-	    mtbus_notify("VIEW", "UPDATEBULLETS", group);
+	    bus_notify("VIEW", "UPDATEBULLETS", group);
 	}
     }
 }
@@ -1391,7 +1393,7 @@ void scene_onmessage(const char* name, void* data)
 	    .matrix = scene.matrix,
 	    .layers = {(int) scene.phase, 3, 4, 5, 0}};
 
-	mtbus_notify("RND", "RNDBUFF", &data);
+	bus_notify("RND", "RNDBUFF", &data);
     }
     else if (strcmp(name, "KEYDOWN") == 0)
     {

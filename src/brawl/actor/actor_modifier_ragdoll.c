@@ -4,9 +4,9 @@
 
 #include "actor_modifier_types.c"
 #include "math1.c"
-#include "math2.c"
-#include "mtmem.c"
 #include "physics2.c"
+#include "zc_memory.c"
+#include "zc_util2.c"
 #include <stdio.h>
 
 struct actor_modifier_ragdoll_masses
@@ -66,9 +66,9 @@ struct _actor_modifier_ragdoll_t
     mass2_t* hitmass_a;
     mass2_t* hitmass_b;
 
-    mtvec_t*    masses;
-    mtvec_t*    aguards;
-    mtvec_t*    dguards;
+    vec_t*      masses;
+    vec_t*      aguards;
+    vec_t*      dguards;
     surfaces_t* emptysurfaces;
 
     struct actor_modifier_ragdoll_masses  mas;
@@ -88,8 +88,8 @@ void              actor_modifier_ragdoll_setdragged(actor_modifier_t* modifier, 
 
 #if __INCLUDE_LEVEL__ == 0
 
-#include "actor_modifier_ragdoll.c"
 #include "actor.c"
+#include "actor_modifier_ragdoll.c"
 #include <string.h>
 
 /* default state */
@@ -132,15 +132,15 @@ actor_modifier_t* actor_modifier_ragdoll_alloc()
 	.elbow_a = aguard2_alloc(masses.neck, masses.elbow_a, masses.hand_a, M_PI, 2 * M_PI - M_PI / 8),
 	.elbow_b = aguard2_alloc(masses.neck, masses.elbow_b, masses.hand_b, M_PI, 2 * M_PI - M_PI / 8)};
 
-    actor_modifier_t*         modifier = mtmem_calloc(sizeof(actor_modifier_t), actor_modifier_ragdoll_destruct);
-    actor_modifier_ragdoll_t* data     = mtmem_calloc(sizeof(actor_modifier_ragdoll_t), NULL);
+    actor_modifier_t*         modifier = CAL(sizeof(actor_modifier_t), actor_modifier_ragdoll_destruct, NULL);
+    actor_modifier_ragdoll_t* data     = CAL(sizeof(actor_modifier_ragdoll_t), NULL, NULL);
 
     modifier->data = data;
     modifier->_new = actor_modifier_ragdoll_new;
 
-    data->masses        = mtvec_alloc();
-    data->aguards       = mtvec_alloc();
-    data->dguards       = mtvec_alloc();
+    data->masses        = VNEW();
+    data->aguards       = VNEW();
+    data->dguards       = VNEW();
     data->emptysurfaces = surfaces_alloc(0, 100.0);
 
     data->hit_inited = 0;
@@ -159,36 +159,36 @@ actor_modifier_t* actor_modifier_ragdoll_alloc()
     data->attack.trans = v2_init(0.0, 0.0);
     data->attack.basis = v2_init(0.0, 0.0);
 
-    mtvec_add(data->masses, masses.head);
-    mtvec_add(data->masses, masses.neck);
-    mtvec_add(data->masses, masses.hip);
-    mtvec_add(data->masses, masses.elbow_a);
-    mtvec_add(data->masses, masses.elbow_b);
-    mtvec_add(data->masses, masses.hand_a);
-    mtvec_add(data->masses, masses.hand_b);
-    mtvec_add(data->masses, masses.knee_b);
-    mtvec_add(data->masses, masses.knee_a);
-    mtvec_add(data->masses, masses.ankle_b);
-    mtvec_add(data->masses, masses.ankle_a);
+    VADD(data->masses, masses.head);
+    VADD(data->masses, masses.neck);
+    VADD(data->masses, masses.hip);
+    VADD(data->masses, masses.elbow_a);
+    VADD(data->masses, masses.elbow_b);
+    VADD(data->masses, masses.hand_a);
+    VADD(data->masses, masses.hand_b);
+    VADD(data->masses, masses.knee_b);
+    VADD(data->masses, masses.knee_a);
+    VADD(data->masses, masses.ankle_b);
+    VADD(data->masses, masses.ankle_a);
 
-    mtvec_add(data->aguards, aguards.neck);
-    mtvec_add(data->aguards, aguards.hip_a);
-    mtvec_add(data->aguards, aguards.hip_b);
-    mtvec_add(data->aguards, aguards.knee_a);
-    mtvec_add(data->aguards, aguards.knee_b);
-    mtvec_add(data->aguards, aguards.elbow_a);
-    mtvec_add(data->aguards, aguards.elbow_b);
+    VADD(data->aguards, aguards.neck);
+    VADD(data->aguards, aguards.hip_a);
+    VADD(data->aguards, aguards.hip_b);
+    VADD(data->aguards, aguards.knee_a);
+    VADD(data->aguards, aguards.knee_b);
+    VADD(data->aguards, aguards.elbow_a);
+    VADD(data->aguards, aguards.elbow_b);
 
-    mtvec_add(data->dguards, dguards.headtoneck);
-    mtvec_add(data->dguards, dguards.necktohip);
-    mtvec_add(data->dguards, dguards.necktoelbow_a);
-    mtvec_add(data->dguards, dguards.necktoelbow_b);
-    mtvec_add(data->dguards, dguards.elbowtohand_a);
-    mtvec_add(data->dguards, dguards.elbowtohand_b);
-    mtvec_add(data->dguards, dguards.hiptoknee_a);
-    mtvec_add(data->dguards, dguards.hiptoknee_b);
-    mtvec_add(data->dguards, dguards.kneetoankle_a);
-    mtvec_add(data->dguards, dguards.kneetoankle_b);
+    VADD(data->dguards, dguards.headtoneck);
+    VADD(data->dguards, dguards.necktohip);
+    VADD(data->dguards, dguards.necktoelbow_a);
+    VADD(data->dguards, dguards.necktoelbow_b);
+    VADD(data->dguards, dguards.elbowtohand_a);
+    VADD(data->dguards, dguards.elbowtohand_b);
+    VADD(data->dguards, dguards.hiptoknee_a);
+    VADD(data->dguards, dguards.hiptoknee_b);
+    VADD(data->dguards, dguards.kneetoankle_a);
+    VADD(data->dguards, dguards.kneetoankle_b);
 
     data->mas = masses;
     data->ang = aguards;
@@ -204,15 +204,15 @@ void actor_modifier_ragdoll_destruct(void* pointer)
     actor_modifier_t*         modifier = pointer;
     actor_modifier_ragdoll_t* data     = modifier->data;
 
-    for (int index = 0; index < data->masses->length; index++) mtmem_release(data->masses->data[index]);
-    for (int index = 0; index < data->aguards->length; index++) mtmem_release(data->aguards->data[index]);
-    for (int index = 0; index < data->dguards->length; index++) mtmem_release(data->dguards->data[index]);
+    for (int index = 0; index < data->masses->length; index++) REL(data->masses->data[index]);
+    for (int index = 0; index < data->aguards->length; index++) REL(data->aguards->data[index]);
+    for (int index = 0; index < data->dguards->length; index++) REL(data->dguards->data[index]);
 
-    mtmem_release(data->masses);
-    mtmem_release(data->aguards);
-    mtmem_release(data->dguards);
-    mtmem_release(data->emptysurfaces);
-    mtmem_release(modifier->data);
+    REL(data->masses);
+    REL(data->aguards);
+    REL(data->dguards);
+    REL(data->emptysurfaces);
+    REL(modifier->data);
 }
 
 /* resets state */
@@ -317,8 +317,8 @@ struct get_dgurads_result
 
 struct get_dgurads_result actor_modifier_ragdoll_get_ik_dguards(actor_modifier_t* modifier, actor_modifier_args_t* args, mass2_t* mass)
 {
-    actor_modifier_ragdoll_t* data = modifier->data;
-    struct get_dgurads_result result;
+    actor_modifier_ragdoll_t* data   = modifier->data;
+    struct get_dgurads_result result = {0};
 
     if (mass == data->mas.head)
     {
@@ -504,9 +504,9 @@ char actor_modifier_ragdoll_hit(actor_modifier_t* modifier, actor_modifier_args_
 	    actor->gothit    = 0;
 	    if (strcmp(actor->name, "hero") == 0)
 	    {
-		mtstr_t* text = mtstr_frombytes("Health problems");
+		str_t* text = str_frombytes("Health problems");
 		cmdqueue_delay(args->cmdqueue, "scene.showwasted", text, NULL, args->ticks + 180);
-		mtmem_release(text);
+		REL(text);
 	    }
 	}
     }
@@ -629,7 +629,7 @@ void actor_modifier_ragdoll_do_ragdoll(actor_modifier_t* modifier, actor_modifie
 	{
 	    attack_t* attack = attack_alloc(actor, actor->points.neck, v2_sub(actor->points.hip, actor->points.neck), actor->metrics.hitpower);
 	    cmdqueue_add(args->cmdqueue, "scene.punch", NULL, attack);
-	    mtmem_release(attack);
+	    REL(attack);
 	}
 
 	/* get actual point positions */

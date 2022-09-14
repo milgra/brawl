@@ -11,8 +11,8 @@
 
 #include "cmd.c"
 #include "defaults.c"
-#include "math2.c"
 #include "physics2.c"
+#include "zc_util2.c"
 
 typedef struct _control_state_t control_state_t;
 struct _control_state_t
@@ -158,13 +158,13 @@ struct _sight_t
 
 attack_t* attack_alloc(void* actor, v2_t trans, v2_t basis, float power)
 {
-    attack_t* attack = mtmem_calloc(sizeof(attack_t), attack_destruct);
+    attack_t* attack = CAL(sizeof(attack_t), attack_destruct, NULL);
     attack->actor    = actor;
     attack->trans    = trans;
     attack->basis    = basis;
     attack->power    = power;
 
-    if (actor != NULL) mtmem_retain(actor);
+    if (actor != NULL) RET(actor);
     return attack;
 }
 
@@ -173,7 +173,7 @@ attack_t* attack_alloc(void* actor, v2_t trans, v2_t basis, float power)
 void attack_destruct(void* pointer)
 {
     attack_t* attack = pointer;
-    if (attack->actor != NULL) mtmem_release(attack->actor);
+    if (attack->actor != NULL) REL(attack->actor);
 }
 
 /* movement */

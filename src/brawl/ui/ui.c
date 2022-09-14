@@ -1,7 +1,7 @@
 #include "ui.h"
-#include "mtcstr.c"
-#include "mtmap.c"
-#include "mtmem.c"
+#include "zc_cstring.c"
+#include "zc_map.c"
+#include "zc_memory.c"
 #include <assert.h>
 
 void uitouch_dealloc(void* pointer);
@@ -11,10 +11,10 @@ void ui_dealloc(void* pointer);
 
 uitouch_t* uitouch_alloc(char* id, v2_t start)
 {
-    uitouch_t* touch = mtmem_calloc(sizeof(uitouch_t), uitouch_dealloc);
+    uitouch_t* touch = CAL(sizeof(uitouch_t), uitouch_dealloc, NULL);
 
-    touch->id    = mtcstr_fromcstring(id);
-    touch->views = mtvec_alloc();
+    touch->id    = cstr_new_cstring(id);
+    touch->views = VNEW();
     touch->start = touch->actual = touch->last = start;
 
     return touch;
@@ -26,22 +26,22 @@ void uitouch_dealloc(void* pointer)
 {
     uitouch_t* touch = pointer;
 
-    mtmem_release(touch->id);
-    mtmem_release(touch->views);
+    REL(touch->id);
+    REL(touch->views);
 }
 
 /* create ui */
 
 ui_t* ui_alloc(float swipedist)
 {
-    ui_t* ui = mtmem_alloc(sizeof(ui_t), ui_dealloc);
+    ui_t* ui = CAL(sizeof(ui_t), ui_dealloc, NULL);
 
-    ui->touches  = mtmap_alloc();
-    ui->timed    = mtvec_alloc();
-    ui->visible  = mtvec_alloc();
-    ui->focused  = mtvec_alloc();
-    ui->scrolled = mtvec_alloc();
-    ui->zoomed   = mtvec_alloc();
+    ui->touches  = MNEW();
+    ui->timed    = VNEW();
+    ui->visible  = VNEW();
+    ui->focused  = VNEW();
+    ui->scrolled = VNEW();
+    ui->zoomed   = VNEW();
 
     ui->swipedist = swipedist;
 
@@ -54,12 +54,12 @@ void ui_dealloc(void* pointer)
 {
     ui_t* ui = pointer;
 
-    mtmem_release(ui->touches);
-    mtmem_release(ui->timed);
-    mtmem_release(ui->visible);
-    mtmem_release(ui->focused);
-    mtmem_release(ui->scrolled);
-    mtmem_release(ui->zoomed);
+    REL(ui->touches);
+    REL(ui->timed);
+    REL(ui->visible);
+    REL(ui->focused);
+    REL(ui->scrolled);
+    REL(ui->zoomed);
 }
 
 /* sets focus */
@@ -76,14 +76,14 @@ void ui_setfocused(ui_t* ui, element_t* element, input_t* input)
 	element->input(element, &focusinput);
     }
 
-    mtvec_reset(ui->focused);
+    vec_reset(ui->focused);
 
     if (element != NULL)
     {
 	input_t focusinput = *input;
 	focusinput.type    = kInputTypeFocus;
 	element->input(element, &focusinput);
-	mtvec_adduniquedata(ui->focused, element);
+	vec_add_unique_data(ui->focused, element);
     }
 }
 
@@ -91,14 +91,14 @@ void ui_setfocused(ui_t* ui, element_t* element, input_t* input)
 
 void ui_addtimed(ui_t* ui, element_t* element)
 {
-    mtvec_adduniquedata(ui->timed, element);
+    vec_add_unique_data(ui->timed, element);
 }
 
 /* remove timed view */
 
 void ui_removetimed(ui_t* ui, element_t* element)
 {
-    mtvec_remove(ui->timed, element);
+    VREM(ui->timed, element);
 }
 
 /* touch down event */
@@ -108,11 +108,11 @@ void ui_touch_down(ui_t* ui, input_t* input)
     float x = input->floata;
     float y = input->floatb;
 
-    assert(mtmap_get(ui->touches, input->stringa) == NULL);
+    assert(MGET(ui->touches, input->stringa) == NULL);
 
     uitouch_t* touch = uitouch_alloc(input->stringa, v2_init(x, y));
-    mtmap_put(ui->touches, input->stringa, touch);
-    mtmem_release(touch);
+    MPUT(ui->touches, input->stringa, touch);
+    REL(touch);
 
     for (int index = 0; index < ui->visible->length; index++)
     {
@@ -126,8 +126,8 @@ void ui_touch_down(ui_t* ui, input_t* input)
 	    y >= (trans.y + element->finaly) &&
 	    y <= (trans.y + element->finaly + element->height))
 	{
-	    if (element->notouchunder == 1) mtvec_reset(touch->views);
-	    mtvec_add(touch->views, element);
+	    if (element->notouchunder == 1) vec_reset(touch->views);
+	    VADD(touch->views, element);
 	}
     }
 
@@ -168,7 +168,7 @@ void ui_touch_drag(ui_t* ui, input_t* input)
 {
     if (ui->touches->count == 1)
     {
-	uitouch_t* touch = mtmap_get(ui->touches, input->stringa);
+	uitouch_t* touch = MGET(ui->touches, input->stringa);
 
 	if (touch != NULL)
 	{
@@ -202,16 +202,17 @@ void ui_touch_drag(ui_t* ui, input_t* input)
     }
     else if (ui->touches->count == 2)
     {
-	mtvec_t* keys = mtmap_keys(ui->touches);
+	vec_t* keys = VNEW();
+	map_keys(ui->touches, keys);
 
-	uitouch_t* touch = mtmap_get(ui->touches, input->stringa);
+	uitouch_t* touch = MGET(ui->touches, input->stringa);
 
 	touch->last = v2_init(input->floata, input->floatb);
 
-	uitouch_t* toucha = mtmap_get(ui->touches, keys->data[0]);
-	uitouch_t* touchb = mtmap_get(ui->touches, keys->data[1]);
+	uitouch_t* toucha = MGET(ui->touches, keys->data[0]);
+	uitouch_t* touchb = MGET(ui->touches, keys->data[1]);
 
-	mtmem_release(keys);
+	REL(keys);
 
 	float oldx = fabs(touchb->actual.x - toucha->actual.x);
 	float oldy = fabs(touchb->actual.y - toucha->actual.y);
@@ -248,7 +249,7 @@ void ui_touch_drag(ui_t* ui, input_t* input)
 
 void ui_touch_up(ui_t* ui, input_t* input)
 {
-    uitouch_t* touch = mtmap_get(ui->touches, input->stringa);
+    uitouch_t* touch = MGET(ui->touches, input->stringa);
 
     if (touch != NULL)
     {
@@ -259,7 +260,7 @@ void ui_touch_up(ui_t* ui, input_t* input)
 	}
     }
 
-    mtmap_del(ui->touches, input->stringa);
+    MDEL(ui->touches, input->stringa);
 }
 
 /* zoom start event */
@@ -271,7 +272,7 @@ void ui_zoom_start(ui_t* ui, input_t* input)
 
     /* collect scrolled views */
 
-    mtvec_reset(ui->zoomed);
+    vec_reset(ui->zoomed);
 
     for (int index = 0; index < ui->visible->length; index++)
     {
@@ -283,7 +284,7 @@ void ui_zoom_start(ui_t* ui, input_t* input)
 	    y >= (trans.y + element->finaly) &&
 	    y <= (trans.y + element->finaly + element->height))
 	{
-	    mtvec_add(ui->zoomed, element);
+	    VADD(ui->zoomed, element);
 	}
     }
 
@@ -325,7 +326,7 @@ void ui_scroll_start(ui_t* ui, input_t* input)
 
     /* collect scrolled views */
 
-    mtvec_reset(ui->scrolled);
+    vec_reset(ui->scrolled);
 
     for (int index = 0; index < ui->visible->length; index++)
     {
@@ -337,7 +338,7 @@ void ui_scroll_start(ui_t* ui, input_t* input)
 	    y >= (trans.y + element->finaly) &&
 	    y <= (trans.y + element->finaly + element->height))
 	{
-	    mtvec_add(ui->scrolled, element);
+	    VADD(ui->scrolled, element);
 	}
     }
 

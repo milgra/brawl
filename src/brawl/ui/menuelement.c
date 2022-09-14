@@ -1,10 +1,11 @@
 
 
 #include "menuelement.h"
-#include "mtmem.c"
-#include "mtstr.c"
 #include "sliderelement.h"
+#include "str_util.c"
 #include "textelement.h"
+#include "zc_memory.c"
+#include "zc_string.c"
 
 /* creates menuelement */
 
@@ -22,7 +23,7 @@ element_t* menuelement_alloc(
 {
     element_t* element = solidelement_alloc("menu", x, y, width, height, 0x000000DD);
 
-    element->data  = mtmem_alloc(sizeof(menudata_t), NULL);
+    element->data  = CAL(sizeof(menudata_t), NULL, NULL);
     element->input = menuelement_input;
 
     float position = 0.0;
@@ -45,7 +46,7 @@ element_t* menuelement_alloc(
 		mystyle.backcolor   = item.color;
 		mystyle.textsize    = 120.0;
 
-		mtstr_t* label = mtstr_frombytes(item.label);
+		str_t* label = str_frombytes(item.label);
 
 		itemelement = textelement_alloc(
 		    "menuitem",
@@ -58,12 +59,12 @@ element_t* menuelement_alloc(
 		    font,
 		    mystyle);
 
-		mtmem_release(label);
+		REL(label);
 
 		mystyle.textsize  = 20.0;
 		mystyle.backcolor = 0;
 
-		label = mtstr_frombytes("by Milan Toth");
+		label = str_frombytes("by Milan Toth");
 
 		element_t* homelement = textelement_alloc(
 		    "homeitem",
@@ -76,7 +77,7 @@ element_t* menuelement_alloc(
 		    font,
 		    mystyle);
 
-		mtmem_release(label);
+		REL(label);
 
 		// homelement->autosize.keepxcenter = 1;
 
@@ -88,9 +89,9 @@ element_t* menuelement_alloc(
 	    }
 	    case kMenuItemTypeLabel:
 	    {
-		mtstr_t* label = mtstr_frombytes(item.label);
-		itemelement    = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
-		mtmem_release(label);
+		str_t* label = str_frombytes(item.label);
+		itemelement  = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
+		REL(label);
 
 		break;
 	    }
@@ -98,9 +99,9 @@ element_t* menuelement_alloc(
 	    {
 		textstyle_t mystyle = text;
 		mystyle.backcolor   = item.color;
-		mtstr_t* label      = mtstr_frombytes(item.label);
+		str_t* label        = str_frombytes(item.label);
 		itemelement         = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, mystyle);
-		mtmem_release(label);
+		REL(label);
 
 		element_setaction(itemelement, "ontouchup", item.action);
 
@@ -108,16 +109,16 @@ element_t* menuelement_alloc(
 	    }
 	    case kMenuItemTypeToggle:
 	    {
-		mtstr_t* label = mtstr_frombytes(item.label);
-		itemelement    = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
-		mtmem_release(label);
+		str_t* label = str_frombytes(item.label);
+		itemelement  = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
+		REL(label);
 
 		break;
 	    }
 	    case kMenuItemTypeSlider:
 	    {
 		text.backcolor         = 0;
-		mtstr_t* label         = mtstr_frombytes(item.label);
+		str_t* label           = str_frombytes(item.label);
 		itemelement            = sliderelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, 0x00FF0088, item.color, 1, 1);
 		element_t* textelement = textelement_alloc("textitem", 0, 0, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
 
@@ -125,8 +126,8 @@ element_t* menuelement_alloc(
 
 		element_setaction(itemelement, "onslide", item.action);
 
-		mtmem_release(label);
-		mtmem_release(textelement);
+		REL(label);
+		REL(textelement);
 
 		break;
 	    }

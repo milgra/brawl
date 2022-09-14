@@ -2,7 +2,7 @@
 #ifndef parabola_types_h
 #define parabola_types_h
 
-#include "math2.c"
+#include "zc_util2.c"
 
 typedef struct _pivot_t pivot_t;
 struct _pivot_t
@@ -20,23 +20,23 @@ void pivot_destruct(void* pointer);
 
 #if __INCLUDE_LEVEL__ == 0
 
-#include "mtcstr.c"
-#include "mtmem.c"
-#include "mtstr.c"
+#include "zc_cstring.c"
+#include "zc_memory.c"
+#include "zc_string.c"
 
 void pivot_destruct(void* pointer)
 {
 
     pivot_t* pivot = pointer;
-    mtmem_release(pivot->id);
+    REL(pivot->id);
 }
 
 pivot_t* pivot_alloc(char* id, v2_t position)
 {
 
-    pivot_t* pivot = mtmem_alloc(sizeof(pivot_t), pivot_destruct);
+    pivot_t* pivot = CAL(sizeof(pivot_t), pivot_destruct, NULL);
 
-    pivot->id       = mtcstr_fromcstring(id);
+    pivot->id       = cstr_new_cstring(id);
     pivot->position = position;
 
     return pivot;

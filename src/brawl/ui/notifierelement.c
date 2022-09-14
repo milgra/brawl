@@ -2,9 +2,9 @@
 
 #include "notifierelement.h"
 #include "cmd.c"
-#include "mtmem.c"
-#include "mtvec.c"
 #include "textelement.h"
+#include "zc_memory.c"
+#include "zc_vector.c"
 
 void notifierdata_dealloc(void* pointer);
 void notifierelement_next(element_t* element, input_t* input);
@@ -25,9 +25,9 @@ element_t* notifierelement_alloc(
     element_t* element       = element_alloc("generic", name, x, y, width, height, NULL);
     element_t* messagelement = textelement_alloc("notifelement", 0, 0, width, height, NULL, NULL, font, style);
 
-    notifierdata_t* data = mtmem_calloc(sizeof(notifierdata_t), notifierdata_dealloc);
+    notifierdata_t* data = CAL(sizeof(notifierdata_t), notifierdata_dealloc, NULL);
 
-    data->messagequeue                = mtvec_alloc();
+    data->messagequeue                = VNEW();
     data->messageelement              = messagelement;
     data->messageelement->translation = &data->animator.actual;
 
@@ -43,16 +43,16 @@ element_t* notifierelement_alloc(
 void notifierdata_dealloc(void* pointer)
 {
     notifierdata_t* data = pointer;
-    mtmem_release(data->messagequeue);
+    REL(data->messagequeue);
 }
 
 /* queue notification */
 
-void notifierelement_queuemessage(element_t* element, mtstr_t* message, input_t* input)
+void notifierelement_queuemessage(element_t* element, str_t* message, input_t* input)
 {
     notifierdata_t* data = element->data;
 
-    mtvec_add(data->messagequeue, message);
+    VADD(data->messagequeue, message);
 
     if (data->messagequeue->length == 1) notifierelement_next(element, input);
 }
@@ -63,7 +63,7 @@ void notifierelement_next(element_t* element, input_t* input)
 {
     notifierdata_t* data = element->data;
 
-    mtstr_t* message = mtvec_head(data->messagequeue);
+    str_t* message = vec_head(data->messagequeue);
 
     textelement_settext(data->messageelement, input->font, input->cmdqueue, message);
 
@@ -118,7 +118,7 @@ void notifierelement_input(element_t* element, input_t* input)
 
 		    if (data->animator.running == 0)
 		    {
-			mtvec_removeatindex(data->messagequeue, 0);
+			vec_rem_at_index(data->messagequeue, 0);
 
 			if (data->messagequeue->length > 0)
 			{

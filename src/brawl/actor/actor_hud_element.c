@@ -11,10 +11,11 @@ element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale, font
 #if __INCLUDE_LEVEL__ == 0
 
 #include "actor_hud_element.c"
-#include "mtcstr.c"
-#include "mtmem.c"
+#include "str_util.c"
 #include "text.c"
 #include "textelement.h"
+#include "zc_cstring.c"
+#include "zc_memory.c"
 
 element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale, font_t* font)
 {
@@ -34,7 +35,7 @@ element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale, font
 	    .textcolor = 0xFFFFFFFF,
 	    .backcolor = 0};
 
-    mtstr_t* namestring = mtstr_frombytes(name);
+    str_t* namestring = str_frombytes(name);
 
     element_t* element   = solidelement_alloc(name, 0, 0, 70.0 * scale, 20.0 * scale, 0);
     element_t* nametext  = textelement_alloc("righttext", 0, 0, 70.0 * scale, 20.0 * scale, namestring, NULL, font, buttontexts);
@@ -45,10 +46,10 @@ element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale, font
 
     nametext->x = element->width / 2.0 - nametext->width / 2.0;
 
-    mtmem_releaseeach(healthbar, namestring, nametext, NULL);
+    mem_release_each(healthbar, namestring, nametext, NULL);
 
-    mtmem_release(element->type);
-    element->type    = mtcstr_fromcstring("hudelement");
+    REL(element->type);
+    element->type    = cstr_new_cstring("hudelement");
     element->exclude = 1;
 
     return element;

@@ -57,6 +57,7 @@ extern "C"
 
 #endif
 
+#include <linux/limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -70,10 +71,10 @@ extern "C"
 #include "scene.c"
 #include "view.c"
 
+#include "bus.c"
 #include "cmd.c"
-#include "mtbus.c"
-#include "mtcstr.c"
 #include "settings.c"
+#include "zc_cstring.c"
 
     char  drag  = 0;
     char  quit  = 0;
@@ -152,7 +153,7 @@ extern "C"
 	    defaults.sceneindex = 0;
 	    defaults_save();
 
-	    mtbus_notify("SCN", "LOAD", &defaults.sceneindex);
+	    bus_notify("SCN", "LOAD", &defaults.sceneindex);
 	}
 	else if (strcmp(name, "RESTARTGAME") == 0)
 	{
@@ -160,13 +161,13 @@ extern "C"
 	    defaults.sceneindex = 1;
 	    defaults_save();
 
-	    mtbus_notify("SCN", "LOAD", &defaults.sceneindex);
+	    bus_notify("SCN", "LOAD", &defaults.sceneindex);
 	}
 	else if (strcmp(name, "RESETLEVEL") == 0)
 	{
 
 	    scene.state = kSceneStateAlive;
-	    mtbus_notify("SCN", "LOAD", &defaults.sceneindex);
+	    bus_notify("SCN", "LOAD", &defaults.sceneindex);
 
 	    if (scene.herogroup->bubble == NULL)
 	    {
@@ -179,7 +180,7 @@ extern "C"
 		};
 
 		const char* string           = strings[rand() % 4];
-		scene.herogroup->currenttext = mtstr_frombytes((char*) string);
+		scene.herogroup->currenttext = str_frombytes((char*) string);
 	    }
 	}
 	else if (strcmp(name, "NEXTLEVEL") == 0)
@@ -195,12 +196,12 @@ extern "C"
 
 		scene.state = kSceneStateAlive;
 
-		mtbus_notify("SCN", "LOAD", &defaults.sceneindex);
+		bus_notify("SCN", "LOAD", &defaults.sceneindex);
 	    }
 	    else
 	    {
 
-		mtbus_notify("VIEW", "SHOWELEMENT", (char*) "completedelement");
+		bus_notify("VIEW", "SHOWELEMENT", (char*) "completedelement");
 	    }
 	}
     }
@@ -213,7 +214,7 @@ extern "C"
 	/* paths first */
 
 	char* basepath = SDL_GetPrefPath("milgra", "brawl");
-	char* respath  = mtcstr_fromformat("%s../res/", SDL_GetBasePath(), NULL);
+	char* respath  = cstr_new_format(PATH_MAX, "%s../res/", SDL_GetBasePath(), NULL);
 
 	printf("respath %s\n", respath);
 
@@ -223,8 +224,8 @@ extern "C"
 
 	/* message bus */
 
-	mtbus_init();
-	mtbus_subscribe("CTL", main_onmessage);
+	bus_init();
+	bus_subscribe("CTL", main_onmessage);
 
 	int framebuffer  = 0;
 	int renderbuffer = 0;
@@ -238,9 +239,9 @@ extern "C"
 	defaults.width  = width;
 	defaults.height = height;
 
-	char* fontpath = mtcstr_fromformat("%s/Impact.ttf", defaults.respath, NULL);
+	char* fontpath = cstr_new_format(PATH_MAX, "%s/Impact.ttf", defaults.respath, NULL);
 	defaults.font  = font_alloc(fontpath);
-	mtmem_release(fontpath);
+	REL(fontpath);
 
 	/* bridges should be inited after defaults because scaling is set up there */
 
@@ -265,19 +266,19 @@ extern "C"
 		.x = width * scale,
 		.y = height * scale};
 
-	mtbus_notify("SCN", "RESIZE", &dimensions);
-	mtbus_notify("VIEW", "RESIZE", &dimensions);
+	bus_notify("SCN", "RESIZE", &dimensions);
+	bus_notify("VIEW", "RESIZE", &dimensions);
 
 	/* load saved level */
 
 	if (defaults.sceneindex > 0)
 	{
 
-	    mtbus_notify("VIEW", "HIDEELEMENT", (void*) "paramelement");
+	    bus_notify("VIEW", "HIDEELEMENT", (void*) "paramelement");
 	}
 
-	mtbus_notify("SCN", "LOAD", &defaults.sceneindex);
-	mtbus_notify("VIEW", "SHOWELEMENT", (void*) "menuelement");
+	bus_notify("SCN", "LOAD", &defaults.sceneindex);
+	bus_notify("VIEW", "SHOWELEMENT", (void*) "menuelement");
 
 	/* cleanup */
 
@@ -294,7 +295,7 @@ extern "C"
 	view_free();
 	scene_free();
 	bridge_free();
-	mtbus_free();
+	bus_free();
 	defaults_free();
 
 #ifdef STEAM
@@ -329,7 +330,7 @@ extern "C"
 			    .x  = event.tfinger.x * width * scale,
 			    .y  = event.tfinger.y * height * scale};
 
-		    mtbus_notify("VIEW", "TOUCHDOWN", &touch);
+		    bus_notify("VIEW", "TOUCHDOWN", &touch);
 		}
 		else if (event.type == SDL_FINGERUP)
 		{
@@ -346,7 +347,7 @@ extern "C"
 			    .x  = event.tfinger.x * width * scale,
 			    .y  = event.tfinger.y * height * scale};
 
-		    mtbus_notify("VIEW", "TOUCHUP", &touch);
+		    bus_notify("VIEW", "TOUCHUP", &touch);
 		}
 #else
 	    if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP || event.type == SDL_MOUSEMOTION)
@@ -367,18 +368,18 @@ extern "C"
 		{
 
 		    drag = 1;
-		    mtbus_notify("VIEW", "TOUCHDOWN", &touch);
+		    bus_notify("VIEW", "TOUCHDOWN", &touch);
 		}
 		else if (event.type == SDL_MOUSEBUTTONUP)
 		{
 
 		    drag = 0;
-		    mtbus_notify("VIEW", "TOUCHUP", &touch);
+		    bus_notify("VIEW", "TOUCHUP", &touch);
 		}
 		else if (event.type == SDL_MOUSEMOTION && drag == 1)
 		{
 
-		    mtbus_notify("VIEW", "TOUCHMOVE", &touch);
+		    bus_notify("VIEW", "TOUCHMOVE", &touch);
 		}
 	    }
 #endif
@@ -399,14 +400,14 @@ extern "C"
 			defaults.width  = dimensions.x;
 			defaults.height = dimensions.y;
 
-			mtbus_notify("VIEW", "RESIZE", &dimensions);
-			mtbus_notify("SCN", "RESIZE", &dimensions);
+			bus_notify("VIEW", "RESIZE", &dimensions);
+			bus_notify("SCN", "RESIZE", &dimensions);
 		    }
 		}
 		else if (event.type == SDL_KEYDOWN)
 		{
 
-		    mtbus_notify("SCN", "KEYDOWN", &event.key.keysym.sym);
+		    bus_notify("SCN", "KEYDOWN", &event.key.keysym.sym);
 		}
 		else if (event.type == SDL_KEYUP)
 		{
@@ -420,18 +421,18 @@ extern "C"
 			    break;
 		    }
 
-		    mtbus_notify("SCN", "KEYUP", &event.key.keysym.sym);
+		    bus_notify("SCN", "KEYUP", &event.key.keysym.sym);
 		}
 		else if (event.type == SDL_APP_WILLENTERFOREGROUND)
 		{
 
-		    mtbus_notify("SCN", "RESETTIME", NULL);
-		    mtbus_notify("SND", "FOREGROUND", NULL);
+		    bus_notify("SCN", "RESETTIME", NULL);
+		    bus_notify("SND", "FOREGROUND", NULL);
 		}
 		else if (event.type == SDL_APP_WILLENTERBACKGROUND)
 		{
 
-		    mtbus_notify("SND", "BACKGROUND", NULL);
+		    bus_notify("SND", "BACKGROUND", NULL);
 		}
 		else if (event.type == SDL_QUIT)
 		{
@@ -461,13 +462,13 @@ extern "C"
 
 		defaults.ticks = (int) fticks;
 
-		mtbus_notify("SCN", "UPDATE", &ratio);
-		mtbus_notify("VIEW", "UPDATE", &ratio);
+		bus_notify("SCN", "UPDATE", &ratio);
+		bus_notify("VIEW", "UPDATE", &ratio);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		mtbus_notify("SCN", "RENDER", &ticks);
-		mtbus_notify("VIEW", "RENDER", &ticks);
+		bus_notify("SCN", "RENDER", &ticks);
+		bus_notify("VIEW", "RENDER", &ticks);
 	    }
 
 	    prevticks = ticks;

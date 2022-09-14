@@ -1,7 +1,8 @@
 
 
 #include "textelement.h"
-#include "mtmem.c"
+#include "str_util.c"
+#include "zc_memory.c"
 #include <string.h>
 
 void textdata_dealloc(void* pointer);
@@ -17,18 +18,18 @@ element_t* textelement_alloc(
     float       y,
     float       width,
     float       height,
-    mtstr_t*    string,
-    mtstr_t*    prompt,
+    str_t*      string,
+    str_t*      prompt,
     font_t*     font,
     textstyle_t text)
 {
 
     element_t*  element = element_alloc("text", name, x, y, width, height, NULL);
-    textdata_t* data    = mtmem_calloc(sizeof(textdata_t), textdata_dealloc);
+    textdata_t* data    = CAL(sizeof(textdata_t), textdata_dealloc, NULL);
 
     data->style  = text;
-    data->string = string == NULL ? mtstr_alloc() : mtmem_retain(string);
-    data->prompt = prompt == NULL ? mtstr_alloc() : mtmem_retain(prompt);
+    data->string = string == NULL ? str_new() : RET(string);
+    data->prompt = prompt == NULL ? str_new() : RET(prompt);
 
     /* initial fillup */
 
@@ -39,8 +40,8 @@ element_t* textelement_alloc(
 
     data->ascent       = asc;
     data->cursor.index = 0;
-    data->selections   = mtvec_alloc();
-    data->metrics      = mtmem_calloc(sizeof(glyphmetrics_t), NULL);
+    data->selections   = VNEW();
+    data->metrics      = CAL(sizeof(glyphmetrics_t), NULL, NULL);
 
     element->input = textelement_input;
 
@@ -55,7 +56,7 @@ element_t* textelement_alloc(
 
     if (text.selectable == 1)
     {
-	textselection_t* selection = mtmem_alloc(sizeof(textselection_t), NULL);
+	textselection_t* selection = CAL(sizeof(textselection_t), NULL, NULL);
 	selection->startindex      = 0;
 	selection->endindex        = 0;
 	selection->backcolor       = 0x000000FF;
@@ -66,7 +67,7 @@ element_t* textelement_alloc(
 
     element_setdata(element, data);
 
-    mtmem_release(data);
+    REL(data);
 
     textelement_updatetext(element, font, NULL);
 
@@ -78,10 +79,10 @@ element_t* textelement_alloc(
 void textdata_dealloc(void* pointer)
 {
     textdata_t* data = pointer;
-    mtmem_release(data->string);
-    mtmem_release(data->prompt);
-    mtmem_release(data->metrics);
-    mtmem_release(data->selections);
+    REL(data->string);
+    REL(data->prompt);
+    REL(data->metrics);
+    REL(data->selections);
 }
 
 /* clear text element */
@@ -94,10 +95,10 @@ void textelement_clear(
 {
     textdata_t* data = element->data;
 
-    mtmem_release(data->string);
-    data->string = mtstr_alloc();
+    REL(data->string);
+    data->string = str_new();
 
-    mtvec_reset(data->selections);
+    vec_reset(data->selections);
 
     data->cursor.index = 0;
     textelement_updatetext(element, font, cmdqueue);
@@ -112,15 +113,16 @@ void textelement_resize(element_t* element, float width, float height, font_t* f
 
 /* sets text */
 
-void textelement_settext(element_t* element, font_t* font, cmdqueue_t* cmdqueue, mtstr_t* string)
+void textelement_settext(element_t* element, font_t* font, cmdqueue_t* cmdqueue, str_t* string)
 {
     textdata_t* data = element->data;
 
-    mtmem_release(data->string);
+    REL(data->string);
 
-    data->string = mtstr_fromstring(string);
+    data->string = str_new();
+    str_add_string(data->string, string);
 
-    mtvec_reset(data->selections);
+    vec_reset(data->selections);
 
     data->cursor.index = 0;
     textelement_updatetext(element, font, cmdqueue);
@@ -142,24 +144,24 @@ void textelement_addtext(element_t* element, input_t* input)
 
     if (data->selection != NULL && data->selection->startindex != data->selection->endindex)
     {
-	mtstr_t* string    = mtstr_frombytes(input->stringa);
-	mtstr_t* newstring = mtstr_replace(data->string, string, data->selection->startindex, data->selection->endindex);
+	str_t* string      = str_frombytes(input->stringa);
+	str_t* newstring   = str_new_replace(data->string, string, data->selection->startindex, data->selection->endindex);
 	data->cursor.index = data->selection->startindex + string->length;
-	mtmem_releaseeach(string, data->string, NULL);
+	mem_release_each(string, data->string, NULL);
 	data->string                = newstring;
 	data->selection->startindex = data->selection->endindex;
     }
     else if (data->cursor.index < data->string->length - 1 && data->string->length > 0)
     {
-	mtstr_t* string    = mtstr_frombytes(input->stringa);
-	mtstr_t* newstring = mtstr_replace(data->string, string, data->cursor.index, data->cursor.index);
+	str_t* string    = str_frombytes(input->stringa);
+	str_t* newstring = str_new_replace(data->string, string, data->cursor.index, data->cursor.index);
 	data->cursor.index += string->length;
-	mtmem_releaseeach(string, data->string, NULL);
+	mem_release_each(string, data->string, NULL);
 	data->string = newstring;
     }
     else
     {
-	mtstr_addbytearray(data->string, input->stringa);
+	str_add_bytearray(data->string, input->stringa);
 	data->cursor.index = data->string->length;
     }
 
@@ -177,9 +179,9 @@ void textelement_realdelete(element_t* element, font_t* font, cmdqueue_t* cmdque
     {
 	if (data->cursor.index < data->string->length - 1)
 	{
-	    mtstr_removecodepointatindex(data->string, data->cursor.index);
+	    str_remove_codepoint_at_index(data->string, data->cursor.index);
 	}
-	else mtstr_removecodepointatindex(data->string, data->string->length - 1);
+	else str_remove_codepoint_at_index(data->string, data->string->length - 1);
     }
 
     textelement_updatetext(element, font, cmdqueue);
@@ -211,37 +213,37 @@ void textelement_updatetext(element_t* element, font_t* font, cmdqueue_t* cmdque
     float oldwidth  = element->width;
     float oldheight = element->height;
 
-    mtstr_t* string = data->string;
+    str_t* string = data->string;
 
     if (data->string->length > 0)
     {
-	mtstr_t* linktoken  = mtstr_frombytes("http://");
-	mtstr_t* spacetoken = mtstr_frombytes(" ");
-	uint32_t index      = mtstr_find(string, linktoken, 0);
+	str_t*   linktoken  = str_frombytes("http://");
+	str_t*   spacetoken = str_frombytes(" ");
+	uint32_t index      = str_find(string, linktoken, 0);
 
 	while (index < UINT32_MAX)
 	{
-	    uint32_t spaceindex = mtstr_find(string, spacetoken, index);
+	    uint32_t spaceindex = str_find(string, spacetoken, index);
 	    if (spaceindex == UINT32_MAX) spaceindex = data->string->length;
 
-	    textselection_t* selection = mtmem_alloc(sizeof(textselection_t), NULL);
+	    textselection_t* selection = CAL(sizeof(textselection_t), NULL, NULL);
 	    selection->startindex      = index;
 	    selection->endindex        = spaceindex;
 	    selection->textcolor       = 0x0000FFFF;
 	    selection->backcolor       = 0xFFFF00FF;
 
-	    mtvec_add(data->selections, selection);
+	    VADD(data->selections, selection);
 
-	    index = mtstr_find(string, linktoken, index + 1);
+	    index = str_find(string, linktoken, index + 1);
 	}
 
-	mtmem_release(linktoken);
-	mtmem_release(spacetoken);
+	REL(linktoken);
+	REL(spacetoken);
     }
 
     if (data->string->length == 0 && element->focused == 0) string = data->prompt;
 
-    data->metrics   = mtmem_realloc(data->metrics, sizeof(glyphmetrics_t) * (string->length + 2));
+    data->metrics   = mem_realloc(data->metrics, sizeof(glyphmetrics_t) * (string->length + 2));
     mtbmp_t* bitmap = font_render_text(element->width + 1, element->height + 1, string, font, data->style, data->metrics, data->selections);
 
     if (bitmap != NULL)
@@ -250,11 +252,11 @@ void textelement_updatetext(element_t* element, font_t* font, cmdqueue_t* cmdque
 	element->height = (float) bitmap->height - 1.0;
     }
 
-    mtmem_release(element->bitmap);
+    if (element->bitmap) REL(element->bitmap);
 
     if (element->width != oldwidth || element->height != oldheight)
     {
-	char* onsizechange = mtmap_get(element->actions, "onsizechange");
+	char* onsizechange = MGET(element->actions, "onsizechange");
 	if (onsizechange != NULL && cmdqueue != NULL) cmdqueue_add(cmdqueue, onsizechange, element, NULL);
     }
 
@@ -315,11 +317,11 @@ void textelement_keydown(element_t* element, input_t* input)
     char    key  = input->key;
     font_t* font = input->font;
 
-    char* onchange = mtmap_get(element->actions, "onchange");
+    char* onchange = MGET(element->actions, "onchange");
 
     if (input->key == kInputKeyTypeReturn)
     {
-	char* onenter = mtmap_get(element->actions, "onenter");
+	char* onenter = MGET(element->actions, "onenter");
 	if (onenter != NULL) cmdqueue_add(input->cmdqueue, onenter, element, NULL);
     }
     else if (key == kInputKeyTypeBackspace)
@@ -386,11 +388,11 @@ void textelement_touchdown(element_t* element, input_t* input)
 	    if (index >= selection->startindex && index <= selection->endindex)
 	    {
 		element->notouchunder = 1;
-		mtstr_t* sstring      = mtstr_substring(data->string, selection->startindex, selection->endindex);
-		char*    cstring      = mtstr_bytes(sstring);
+		str_t* sstring        = str_new_substring(data->string, selection->startindex, selection->endindex);
+		char*  cstring        = str_new_cstring(sstring);
 		cmdqueue_add(input->cmdqueue, "app.openlink", element, cstring);
-		mtmem_release(cstring);
-		mtmem_release(sstring);
+		REL(cstring);
+		REL(sstring);
 	    }
 	}
     }
@@ -440,7 +442,7 @@ void textelement_touchdrag(element_t* element, input_t* input)
 	{
 	    if (data->selection->startindex > index) data->selection->startindex = index;
 	    else data->selection->endindex = index;
-	    mtvec_adduniquedata(data->selections, data->selection);
+	    vec_add_unique_data(data->selections, data->selection);
 	    textelement_updatetext(element, input->font, input->cmdqueue);
 	}
     }
@@ -461,7 +463,7 @@ void textelement_touchup(element_t* element, input_t* input)
     {
 	if (data->selection->startindex == data->selection->endindex) element->notouchunder = 0;
 
-	mtvec_remove(data->selections, data->selection);
+	VREM(data->selections, data->selection);
     }
 
     // data->cursor.index = getindex_for_coordinate( element , input );

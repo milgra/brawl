@@ -1,7 +1,7 @@
 
 
 #include "list.h"
-#include "mtmem.c"
+#include "zc_memory.c"
 
 void list_dealloc(void* pointer);
 
@@ -9,11 +9,11 @@ void list_dealloc(void* pointer);
 
 list_t* list_alloc(float height, char align)
 {
-    list_t* list = mtmem_calloc(sizeof(list_t), list_dealloc);
+    list_t* list = CAL(sizeof(list_t), list_dealloc, NULL);
 
     list->length      = 0;
     list->length_real = 10;
-    list->items       = mtmem_alloc(sizeof(listitem_t) * list->length_real, NULL);
+    list->items       = CAL(sizeof(listitem_t) * list->length_real, NULL, NULL);
     list->listsize    = height;
     list->align       = align;
     list->zoom        = 1.0;
@@ -28,7 +28,7 @@ void list_dealloc(void* pointer)
 {
     list_t* list = pointer;
 
-    mtmem_release(list->items);
+    REL(list->items);
 }
 
 /* resets list */
@@ -62,7 +62,7 @@ void list_setheadindex(list_t* list, uint32_t index, uint32_t max)
 void list_extend(list_t* list)
 {
     list->length_real += 10;
-    list->items = mtmem_realloc(list->items, sizeof(listitem_t) * list->length_real);
+    list->items = mem_realloc(list->items, sizeof(listitem_t) * list->length_real);
 }
 
 /* add head item */

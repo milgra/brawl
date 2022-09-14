@@ -6,8 +6,8 @@
 #include "element.h"
 #include "font.c"
 #include "input.h"
-#include "mtstr.c"
 #include "text.c"
+#include "zc_string.c"
 #include <stdio.h>
 
 typedef struct _cursor_t
@@ -23,15 +23,15 @@ typedef struct _cursor_t
 
 typedef struct _textdata_t
 {
-    mtstr_t* string; /* visible string */
-    mtstr_t* prompt; /* prompt string if normal string is not available */
+    str_t* string; /* visible string */
+    str_t* prompt; /* prompt string if normal string is not available */
 
     cursor_t         cursor;
     textstyle_t      style;     /* element's style */
     glyphmetrics_t*  metrics;   /* metrics of visible glyphs, 0 index is empty */
     textselection_t* selection; /* current selection of text element */
 
-    mtvec_t* selections; /* special selections ( hyperlink , etc ) */
+    vec_t* selections; /* special selections ( hyperlink , etc ) */
 
     float ascent; /* ascent of current textstyle */
 
@@ -49,8 +49,8 @@ element_t* textelement_alloc(
     float       y,
     float       width,
     float       height,
-    mtstr_t*    string,
-    mtstr_t*    prompt,
+    str_t*      string,
+    str_t*      prompt,
     font_t*     font,
     textstyle_t text);
 
@@ -58,7 +58,7 @@ void textelement_clear(element_t* element, font_t* font, float scale, cmdqueue_t
 
 void textelement_resize(element_t* element, float width, float height, font_t* font, cmdqueue_t* cmdqueue);
 
-void textelement_settext(element_t* element, font_t* font, cmdqueue_t* cmdqueue, mtstr_t* string);
+void textelement_settext(element_t* element, font_t* font, cmdqueue_t* cmdqueue, str_t* string);
 
 void textelement_addtext(element_t* element, input_t* input);
 

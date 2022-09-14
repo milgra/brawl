@@ -3,12 +3,12 @@
 #ifndef uirenderer_h
 #define uirenderer_h
 
-#include <sys/time.h>
 #include "element.h"
-#include "math2.c"
-#include "ogl.c"
 #include "floatbuffer.c"
 #include "mtbmp.c"
+#include "ogl.c"
+#include "zc_util2.c"
+#include <sys/time.h>
 
 typedef struct _texture_t
 {

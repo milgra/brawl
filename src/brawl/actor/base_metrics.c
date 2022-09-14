@@ -2,9 +2,9 @@
 #ifndef base_metrics_h
 #define base_metrics_h
 
+#include "zc_memory.c"
 #include <stdio.h>
 #include <stdlib.h>
-#include "mtmem.c"
 
 typedef struct _base_metrics_t base_metrics_t;
 struct _base_metrics_t
@@ -55,7 +55,7 @@ base_metrics_t base_metrics_random()
 {
     if (colors == NULL)
     {
-	colors = mtmem_alloc(sizeof(uint32_t) * 30, NULL);
+	colors = CAL(sizeof(uint32_t) * 30, NULL, NULL);
 	for (int index = 0; index < 30; index++) colors[index] = (rand() % 0xFFFFFFFF) | 0xFF;
     }
     base_metrics_t metrics;

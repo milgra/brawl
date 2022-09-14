@@ -1,12 +1,12 @@
 
 
 #include "element.h"
-#include "mtmem.c"
-#include "mtstr.c"
-#include "mtcstr.c"
-#include "math4.c"
 #include "floatbuffer.c"
 #include "image.c"
+#include "zc_cstring.c"
+#include "zc_mat4.c"
+#include "zc_memory.c"
+#include "zc_string.c"
 
 void element_dealloc(void* pointer);
 
@@ -14,14 +14,14 @@ void element_dealloc(void* pointer);
 
 element_t* element_alloc(char* type, char* name, float x, float y, float width, float height, mtbmp_t* bitmap)
 {
-    element_t* element = mtmem_calloc(sizeof(element_t), element_dealloc);
+    element_t* element = CAL(sizeof(element_t), element_dealloc, NULL);
 
     element->focused      = 0;
     element->exclude      = 0;
     element->notouchunder = 0;
 
-    element->type = mtcstr_fromcstring(type);
-    element->name = mtcstr_fromcstring(name);
+    element->type = cstr_new_cstring(type);
+    element->name = cstr_new_cstring(name);
     element->data = NULL;
 
     element->x = x;
@@ -33,9 +33,9 @@ element_t* element_alloc(char* type, char* name, float x, float y, float width, 
     element->finalx = x;
     element->finaly = y;
 
-    element->bitmap      = mtmem_retain(bitmap);
-    element->actions     = mtmap_alloc();
-    element->subelements = mtvec_alloc();
+    if (bitmap) element->bitmap = RET(bitmap);
+    element->actions     = MNEW();
+    element->subelements = VNEW();
     element->translation = NULL;
 
     element->texture.tiled             = 1;
@@ -55,40 +55,40 @@ void element_dealloc(void* pointer)
 {
     element_t* element = pointer;
 
-    mtmem_release(element->type);
-    mtmem_release(element->name);
+    REL(element->type);
+    REL(element->name);
 
-    mtmem_release(element->data);
-    mtmem_release(element->bitmap);
-    mtmem_release(element->actions);
+    REL(element->data);
+    REL(element->bitmap);
+    REL(element->actions);
 
     for (int index = 0; index < element->subelements->length; index++) element_removesubelement(element, element->subelements->data[index]);
 
-    mtmem_release(element->subelements);
+    REL(element->subelements);
 }
 
 /* set type */
 
 void element_settype(element_t* element, char* type)
 {
-    mtmem_release(element->type);
-    element->type = mtcstr_fromcstring(type);
+    REL(element->type);
+    element->type = cstr_new_cstring(type);
 }
 
 /* set data */
 
 void element_setdata(element_t* element, void* data)
 {
-    mtmem_release(element->data);
-    element->data = mtmem_retain(data);
+    if (element->data) REL(element->data);
+    element->data = RET(data);
 }
 
 /* set bitmap */
 
 void element_setbitmap(element_t* element, mtbmp_t* bitmap)
 {
-    mtmem_release(element->bitmap);
-    element->bitmap                    = mtmem_retain(bitmap);
+    if (element->bitmap) REL(element->bitmap);
+    element->bitmap                    = RET(bitmap);
     element->texture.coordstamp.tv_sec = 0;
 }
 
@@ -96,9 +96,9 @@ void element_setbitmap(element_t* element, mtbmp_t* bitmap)
 
 void element_setaction(element_t* element, char* actionid, char* action)
 {
-    char* actioncpy = mtcstr_fromcstring(action);
-    mtmap_put(element->actions, actionid, actioncpy);
-    mtmem_release(actioncpy);
+    char* actioncpy = cstr_new_cstring(action);
+    MPUT(element->actions, actionid, actioncpy);
+    REL(actioncpy);
 }
 
 /* set focused state */
@@ -136,7 +136,7 @@ void element_settranslation(element_t* element, v2_t* translation)
 
 void element_addsubelement(element_t* element, element_t* subelement)
 {
-    mtvec_adduniquedata(element->subelements, subelement);
+    vec_add_unique_data(element->subelements, subelement);
     subelement->translation = element->translation;
 }
 
@@ -144,7 +144,7 @@ void element_addsubelement(element_t* element, element_t* subelement)
 
 void element_addsubelementatindex(element_t* element, element_t* subelement, size_t index)
 {
-    mtvec_adduniquedataatindex(element->subelements, subelement, index);
+    vec_ins_unique_data(element->subelements, subelement, index);
     subelement->translation = element->translation;
 }
 
@@ -152,12 +152,12 @@ void element_addsubelementatindex(element_t* element, element_t* subelement, siz
 
 void element_removesubelement(element_t* element, element_t* subelement)
 {
-    mtvec_remove(element->subelements, subelement);
+    VREM(element->subelements, subelement);
 }
 
 /* collect all elements recursively */
 
-void element_collectelements(element_t* element, v2_t parent, mtvec_t* vector)
+void element_collectelements(element_t* element, v2_t parent, vec_t* vector)
 {
     element->finalx = element->x + parent.x;
     element->finaly = element->y + parent.y;
@@ -165,7 +165,7 @@ void element_collectelements(element_t* element, v2_t parent, mtvec_t* vector)
     parent.x = element->finalx;
     parent.y = element->finaly;
 
-    if (element->exclude == 0) mtvec_add(vector, element);
+    if (element->exclude == 0) VADD(vector, element);
     for (int index = 0; index < element->subelements->length; index++) element_collectelements(element->subelements->data[index], parent, vector);
 }
 
@@ -258,25 +258,25 @@ void element_input(element_t* element, input_t* input)
 	}
 	case kInputTypeTouchDown:
 	{
-	    char* ontouchdown = mtmap_get(element->actions, "ontouchdown");
+	    char* ontouchdown = MGET(element->actions, "ontouchdown");
 	    if (ontouchdown != NULL) cmdqueue_add(input->cmdqueue, ontouchdown, element, NULL);
 	    break;
 	}
 	case kInputTypeTouchUp:
 	{
-	    char* ontouchup = mtmap_get(element->actions, "ontouchup");
+	    char* ontouchup = MGET(element->actions, "ontouchup");
 	    if (ontouchup != NULL) cmdqueue_add(input->cmdqueue, ontouchup, element, NULL);
 	    break;
 	}
 	case kInputTypeRightSwipe:
 	{
-	    char* onswiperight = mtmap_get(element->actions, "onswiperight");
+	    char* onswiperight = MGET(element->actions, "onswiperight");
 	    if (onswiperight != NULL) cmdqueue_add(input->cmdqueue, onswiperight, element, NULL);
 	    break;
 	}
 	case kInputTypeLeftSwipe:
 	{
-	    char* onswipeleft = mtmap_get(element->actions, "onswipeleft");
+	    char* onswipeleft = MGET(element->actions, "onswipeleft");
 	    if (onswipeleft != NULL) cmdqueue_add(input->cmdqueue, onswipeleft, element, NULL);
 	    break;
 	}
@@ -298,7 +298,7 @@ element_t* solidelement_alloc(
 
     element_t* element = element_alloc("solid", name, x, y, width, height, bitmap);
 
-    mtmem_release(bitmap);
+    REL(bitmap);
 
     return element;
 }
@@ -310,7 +310,7 @@ void solidelement_setcolor(element_t* element, uint32_t color)
     mtbmp_t* bitmap = mtbmp_alloc(ceilf(element->width), ceilf(element->height));
     mtbmp_fill_with_color(bitmap, 0, 0, bitmap->width, bitmap->height, color);
     element_setbitmap(element, bitmap);
-    mtmem_release(bitmap);
+    REL(bitmap);
 }
 
 /* allocs image element */
@@ -325,7 +325,7 @@ element_t* imageelement_alloc(
 {
     mtbmp_t*   bitmap  = image_bmp_from_png(imagepath);
     element_t* element = element_alloc("image", name, x, y, width, height, bitmap);
-    mtmem_release(bitmap);
+    REL(bitmap);
 
     return element;
 }
@@ -357,16 +357,16 @@ void videoelement_input(element_t* element, input_t* input);
 /* allocs video element */
 
 element_t* videoelement_alloc(
-    char*    name,
-    float    x,
-    float    y,
-    float    width,
-    float    height,
-    mtstr_t* path)
+    char*  name,
+    float  x,
+    float  y,
+    float  width,
+    float  height,
+    str_t* path)
 {
     element_t* element = element_alloc("video", name, x, y, width, height, NULL);
 
-    element->data  = mtmem_retain(path);
+    element->data  = RET(path);
     element->input = videoelement_input;
 
     element->texture.tiled             = 0;
