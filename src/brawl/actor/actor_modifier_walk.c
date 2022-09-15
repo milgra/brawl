@@ -1,9 +1,8 @@
-
 #ifndef actor_modifier_walk_h
 #define actor_modifier_walk_h
 
 #include "actor_modifier_walk_points.c"
-#include "math1.c"
+#include "tween.c"
 #include "zc_memory.c"
 #include <stdio.h>
 #include <stdlib.h>

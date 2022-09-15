@@ -1,4 +1,3 @@
-
 #ifndef actor_skin_h
 #define actor_skin_h
 

@@ -1,4 +1,3 @@
-
 #ifndef actor_hud_element_h
 #define actor_hud_element_h
 

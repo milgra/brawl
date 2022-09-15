@@ -32,11 +32,6 @@ typedef struct _defaults_t
     char* libpath;
     char* respath;
     char* fontpath;
-
-    char donation_arrived;
-    char prices_arrived;
-    char prices[3][100];
-
 } defaults_t;
 
 extern defaults_t defaults;
@@ -70,8 +65,6 @@ void defaults_init(char* libpath, char* respath)
     {
 	settings_setint("initialized", 1);
 
-	settings_setint("donation_arrived", 0);
-
 	settings_setint("sceneindex", 0);
 	settings_setint("hudvisible", 1);
 
@@ -83,10 +76,9 @@ void defaults_init(char* libpath, char* respath)
 	settings_setint("effects_level", 2);
     }
 
-    defaults.donation_arrived = settings_getint("donation_arrived");
-    defaults.effects_level    = settings_getint("effects_level");
-    defaults.sceneindex       = settings_getint("sceneindex");
-    defaults.hudvisible       = settings_getint("hudvisible");
+    defaults.effects_level = settings_getint("effects_level");
+    defaults.sceneindex    = settings_getint("sceneindex");
+    defaults.hudvisible    = settings_getint("hudvisible");
 
     defaults.musicvolume = settings_getfloat("musicvolume");
     defaults.soundvolume = settings_getfloat("soundvolume");
@@ -130,7 +122,6 @@ void defaults_save()
     settings_setfloat("alpharatio", defaults.alpharatio);
 
     settings_setint("effects_level", defaults.effects_level);
-    settings_setint("donation_arrived", defaults.donation_arrived);
 }
 
 #endif

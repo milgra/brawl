@@ -45,7 +45,6 @@ brawl_inc = include_directories(
 	'src/ui')
 
 com_sources = ['src/brawl/audio.c',
-	       'src/brawl/bridge.c',
 	       'src/brawl/bus.c',
 	       'src/brawl/cmd.c',
 	       'src/brawl/defaults.c',
@@ -79,7 +78,7 @@ com_sources = ['src/brawl/audio.c',
 	       'src/brawl/gl/floatbuffer.c',
 	       'src/brawl/gl/ogl.c',
 
-	       'src/brawl/math/math1.c',
+	       'src/brawl/math/tween.c',
 	       'src/brawl/math/physics2.c',
 	       'src/brawl/math/triangulate.c',
 

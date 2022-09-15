@@ -378,7 +378,7 @@ void view_init_menu(textstyle_t textstyle)
 		.action = "options"},
 	    (menuitem_t){
 		.type   = kMenuItemTypeButton,
-		.label  = "Donate",
+		.label  = "Buy me a coffee",
 		.color  = 0xFFFFFF11,
 		.action = "donate"}
 #if !defined(IOS) && !defined(ANDROID)
@@ -461,72 +461,6 @@ void view_init_menu(textstyle_t textstyle)
     optselement->autosize.filly = 1;
 
     MPUT(view.uielements, "optselement", optselement);
-}
-
-void view_init_donations()
-{
-
-    menuitem_t dntsitems[4] =
-	{
-	    (menuitem_t){
-		.type   = kMenuItemTypeButton,
-		.label  = defaults.prices[0],
-		.color  = 0xFFFFFF11,
-		.action = "donate_a"},
-	    (menuitem_t){
-		.type   = kMenuItemTypeButton,
-		.label  = defaults.prices[1],
-		.color  = 0xFFFFFF11,
-		.action = "donate_b"},
-	    (menuitem_t){
-		.type   = kMenuItemTypeButton,
-		.label  = defaults.prices[2],
-		.color  = 0xFFFFFF11,
-		.action = "donate_c"},
-	    (menuitem_t){
-		.type   = kMenuItemTypeButton,
-		.label  = "Back",
-		.color  = 0xFFFFFF11,
-		.action = "back"}
-
-	};
-
-    textstyle_t textstyle = {0};
-
-    textstyle.font   = defaults.fontpath; // REL 0
-    textstyle.size   = 30.0 * defaults.scale;
-    textstyle.align  = TA_CENTER;
-    textstyle.margin = (int) 5.0 * defaults.scale;
-
-    textstyle.textcolor = 0xFFFFFFFF;
-    textstyle.backcolor = 0xFFFFFF55;
-
-    element_t* dntselement = menuelement_alloc(
-	"dons",
-	0,
-	0,
-	defaults.width,
-	defaults.height,
-	defaults.scale,
-	textstyle,
-
-	4,
-	dntsitems);
-
-    dntselement->autosize.fillx = 1;
-    dntselement->autosize.filly = 1;
-
-    MPUT(view.uielements, "dntselement", dntselement);
-
-    input_t resizeinput  = {0};
-    resizeinput.floata   = defaults.width;
-    resizeinput.floatb   = defaults.height;
-    resizeinput.type     = kInputTypeResize;
-    resizeinput.ticks    = defaults.ticks;
-    resizeinput.scale    = defaults.scale;
-    resizeinput.cmdqueue = view.cmdqueue;
-
-    if (dntselement != NULL) dntselement->input(dntselement, &resizeinput);
 }
 
 void view_init_tip(textstyle_t textstyle)
@@ -1132,10 +1066,6 @@ void view_showtip(char* text)
     {
 	text = "Press DOWN to pick up a gun. Press C to fire it.";
     }
-    else if (strcmp(text, "PlsGive") == 0)
-    {
-	text = "To pick up stuff after the third level please donate from the main menu.";
-    }
 
     str_t* str = str_frombytes(text);
 
@@ -1345,41 +1275,7 @@ void view_input(input_t* input)
 	    }
 	    else if (strcmp(command->name, "donate") == 0)
 	    {
-		if (defaults.prices_arrived == 1)
-		{
-#ifdef RASPBERRY
-		    bus_notify("CTL", "DONATE", defaults.prices[0]);
-		    view_hideelement((char*) "optselement");
-		    view_hideelement((char*) "dntselement");
-		    view_showelement((char*) "menuelement");
-#else
-		    element_t* dntselement = MGET(view.uielements, "donselement");
-		    if (dntselement == NULL) view_init_donations();
-		    view_hideelement((char*) "menuelement");
-		    view_showelement((char*) "dntselement");
-#endif
-		}
-	    }
-	    else if (strcmp(command->name, "donate_a") == 0)
-	    {
-		bus_notify("CTL", "DONATE", defaults.prices[0]);
-		view_hideelement((char*) "optselement");
-		view_hideelement((char*) "dntselement");
-		view_showelement((char*) "menuelement");
-	    }
-	    else if (strcmp(command->name, "donate_b") == 0)
-	    {
-		bus_notify("CTL", "DONATE", defaults.prices[1]);
-		view_hideelement((char*) "optselement");
-		view_hideelement((char*) "dntselement");
-		view_showelement((char*) "menuelement");
-	    }
-	    else if (strcmp(command->name, "donate_c") == 0)
-	    {
-		bus_notify("CTL", "DONATE", defaults.prices[2]);
-		view_hideelement((char*) "optselement");
-		view_hideelement((char*) "dntselement");
-		view_showelement((char*) "menuelement");
+		bus_notify("CTL", "DONATE", NULL);
 	    }
 	    else if (strcmp(command->name, "exit") == 0)
 	    {

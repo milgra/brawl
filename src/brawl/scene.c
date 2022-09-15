@@ -1264,13 +1264,6 @@ void scene_shoot(attack_t* attack)
 
 void scene_pickup(actor_t* actor)
 {
-
-    if (defaults.sceneindex > 3 && defaults.donation_arrived == 0)
-    {
-	bus_notify("VIEW", "SHOWTIP", "PlsGive");
-	return;
-    }
-
     /* get actor's group */
 
     actor_group_t* group = NULL;

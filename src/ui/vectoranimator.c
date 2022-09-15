@@ -3,7 +3,7 @@
 #ifndef vectoranimator_h
 #define vectoranimator_h
 
-#include "math1.c"
+#include "tween.c"
 #include "zc_util2.c"
 #include <stdio.h>
 

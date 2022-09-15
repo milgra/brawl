@@ -1,4 +1,3 @@
-
 #ifndef actor_debug_h
 #define actor_debug_h
 

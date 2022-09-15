@@ -1,10 +1,9 @@
-
 #ifndef actor_modifier_ragdoll_h
 #define actor_modifier_ragdoll_h
 
 #include "actor_modifier_types.c"
-#include "math1.c"
 #include "physics2.c"
+#include "tween.c"
 #include "zc_memory.c"
 #include "zc_util2.c"
 #include <stdio.h>
@@ -96,7 +95,6 @@ void              actor_modifier_ragdoll_setdragged(actor_modifier_t* modifier, 
 
 actor_modifier_t* actor_modifier_ragdoll_alloc()
 {
-
     struct actor_modifier_ragdoll_masses masses = {
 	.head    = mass2_alloc(v2_init(0.0, 0.0), 4.0, 5.0, 0.4),
 	.neck    = mass2_alloc(v2_init(0.0, 0.0), 4.0, 10.0, 0.4),

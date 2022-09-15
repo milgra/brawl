@@ -212,7 +212,6 @@ void actor_ai_follow(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups)
 
 void actor_ai_attack(actor_ai_t* ai, actor_modifier_args_t* args, vec_t* groups)
 {
-
     if ((args->ticks + ai->phase) % 20 == 0)
     {
 	actor_t* actor    = args->actor;

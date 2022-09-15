@@ -1,11 +1,3 @@
-//
-//  actor_type.h
-//  parabola
-//
-//  Created by milgra on 14/11/15.
-//  Copyright © 2015 Milan Toth. All rights reserved.
-//
-
 #ifndef actor_modifier_types_h
 #define actor_modifier_types_h
 

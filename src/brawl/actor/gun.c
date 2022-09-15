@@ -1,4 +1,3 @@
-
 #ifndef gun_h
 #define gun_h
 
@@ -32,7 +31,6 @@ void   gun_new_skin(gun_t* gun, floatbuffer_t* buffer);
 
 gun_t* gun_alloc(v2_t trans, v2_t basis)
 {
-
     gun_t* gun = CAL(sizeof(gun_t), gun_dealloc, NULL);
 
     gun->mass        = mass2_alloc(trans, 4.0, 5.0, .2);
@@ -46,7 +44,6 @@ gun_t* gun_alloc(v2_t trans, v2_t basis)
 
 void gun_dealloc(void* pointer)
 {
-
     gun_t* gun = pointer;
 
     REL(gun->mass);
@@ -56,7 +53,6 @@ void gun_dealloc(void* pointer)
 
 void gun_new(gun_t* gun, surfaces_t* surfaces, v2_t* gravity, cmdqueue_t* actions, float delta)
 {
-
     gun->mass->basis = v2_add(gun->mass->basis, *gravity);
     physics2_new_mass_position(gun->mass, surfaces, delta);
 
@@ -71,7 +67,6 @@ void gun_new(gun_t* gun, surfaces_t* surfaces, v2_t* gravity, cmdqueue_t* action
 
 void gun_new_skin(gun_t* gun, floatbuffer_t* buffer)
 {
-
     if (gun->skincoords == 0) gun->skincoords = ogl_color_float_from_rgbauint32(0x000000FF);
     if (gun->trajcoords == 0) gun->trajcoords = ogl_color_float_from_rgbauint32(0xFFFF00FF);
 

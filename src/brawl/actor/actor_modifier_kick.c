@@ -1,9 +1,8 @@
-
 #ifndef actor_modifier_kick_h
 #define actor_modifier_kick_h
 
 #include "actor_modifier_types.c"
-#include "math1.c"
+#include "tween.c"
 #include "zc_memory.c"
 #include "zc_util2.c"
 #include <stdio.h>

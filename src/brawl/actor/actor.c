@@ -1,4 +1,3 @@
-
 #ifndef actor_h
 #define actor_h
 
@@ -87,19 +86,15 @@ actor_t* actor_alloc(v2_t position, char* name)
 {
     actor_t* actor = CAL(sizeof(actor_t), actor_dealloc, NULL);
 
-    actor->name = cstr_new_cstring(name);
-
-    actor->state  = kActorStateJump;
-    actor->gothit = 0;
-    actor->facing = 1;
-
-    actor->power  = 0.0;
-    actor->health = 0.0;
-
+    actor->name        = cstr_new_cstring(name);
+    actor->state       = kActorStateJump;
+    actor->gothit      = 0;
+    actor->facing      = 1;
+    actor->power       = 0.0;
+    actor->health      = 0.0;
     actor->power_rate  = 0.09;
     actor->health_rate = 0.02;
-
-    actor->modifiers = VNEW();
+    actor->modifiers   = VNEW();
 
     actor->ik   = actor_modifier_ragdoll_alloc();
     actor->walk = actor_modifier_walk_alloc();
@@ -325,7 +320,6 @@ char actor_hit(actor_t* actor, attack_t* attack, v2_t* isp)
 
 void actor_loadstate(actor_t* actor)
 {
-
     int actorinited = settings_getint("actorinited");
     if (actorinited == 0) return;
 
@@ -362,9 +356,7 @@ void actor_loadstate(actor_t* actor)
 
 void actor_savestate(actor_t* actor)
 {
-
     settings_setint("actorinited", 1);
-
     settings_setint("xp", actor->metrics.xp);
     settings_setint("level", actor->metrics.level);
     settings_setfloat("headlength", actor->metrics.headlength);

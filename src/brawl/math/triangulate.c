@@ -1,5 +1,3 @@
-
-
 #ifndef triangulate_h
 #define triangulate_h
 

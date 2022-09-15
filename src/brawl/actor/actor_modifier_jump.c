@@ -1,10 +1,9 @@
-
 #ifndef actor_modifier_jump_h
 #define actor_modifier_jump_h
 
 #include "actor.c"
 #include "actor_modifier_jump_points.c"
-#include "math1.c"
+#include "tween.c"
 #include "zc_memory.c"
 #include <stdio.h>
 #include <stdlib.h>

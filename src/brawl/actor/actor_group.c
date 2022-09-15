@@ -1,4 +1,3 @@
-
 #ifndef actor_group_h
 #define actor_group_h
 

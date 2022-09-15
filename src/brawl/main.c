@@ -11,7 +11,6 @@
 #include "SDL_mixer.h"
 
 #include "audio.c"
-#include "bridge.h"
 #include "defaults.c"
 #include "scene.c"
 #include "view.c"
@@ -34,26 +33,34 @@ uint32_t prevticks;
 SDL_Window*   window;
 SDL_GLContext context;
 
+void bridge_open(char* url)
+{
+    char newurl[100];
+    snprintf(newurl, 100, "xdg-open %s", url);
+    system(newurl);
+}
+
+void bridge_buy(char* item)
+{
+    bridge_open("https://paypal.me/milgra");
+}
+
 void main_onmessage(const char* name, void* data)
 {
-
     if (strcmp(name, "DONATE") == 0)
     {
 	bridge_buy((char*) data);
     }
     else if (strcmp(name, "FEEDBACK") == 0)
     {
-
 	bridge_open((char*) "http://www.milgra.com/brawl.html");
     }
     else if (strcmp(name, "HOMEPAGE") == 0)
     {
-
 	bridge_open((char*) "http://www.milgra.com");
     }
     else if (strcmp(name, "FULLSCREEN") == 0)
     {
-
 	int flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
 
 	char fullscreen = SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -71,25 +78,20 @@ void main_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "RESET") == 0)
     {
-
-	// TODO check this
 	defaults_reset();
     }
     else if (strcmp(name, "EXIT") == 0)
     {
-
 	quit = 1;
     }
     else if (strcmp(name, "EFFECTS") == 0)
     {
-
 	defaults.effects_level += 1;
 	if (defaults.effects_level == 3) defaults.effects_level = 0;
 	defaults_save();
     }
     else if (strcmp(name, "RESETGAME") == 0)
     {
-
 	defaults.sceneindex = 0;
 	defaults_save();
 
@@ -97,7 +99,6 @@ void main_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "RESTARTGAME") == 0)
     {
-
 	defaults.sceneindex = 1;
 	defaults_save();
 
@@ -105,7 +106,6 @@ void main_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "RESETLEVEL") == 0)
     {
-
 	scene.state = kSceneStateAlive;
 	bus_notify("SCN", "LOAD", &defaults.sceneindex);
 
@@ -125,7 +125,6 @@ void main_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "NEXTLEVEL") == 0)
     {
-
 	actor_savestate((actor_t*) scene.herogroup->actor);
 
 	if (defaults.sceneindex + 1 < 7)
@@ -174,12 +173,6 @@ void main_init(void)
     defaults.width  = width;
     defaults.height = height;
 
-    /* bridges should be inited after defaults because scaling is set up there */
-
-    /* request donation prices from app store, init text scaling, init glfw */
-
-    bridge_init();
-
     /* build up view */
 
     view_init();
@@ -221,7 +214,6 @@ void main_free(void)
     audio_free();
     view_free();
     scene_free();
-    bridge_free();
     bus_free();
     defaults_free();
 }

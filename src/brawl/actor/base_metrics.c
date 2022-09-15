@@ -1,4 +1,3 @@
-
 #ifndef base_metrics_h
 #define base_metrics_h
 
