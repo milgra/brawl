@@ -1,5 +1,3 @@
-
-
 #ifndef vectoranimator_h
 #define vectoranimator_h
 

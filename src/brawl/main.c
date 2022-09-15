@@ -1,6 +1,7 @@
 #include "GL/glew.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <getopt.h>
 
 #include <linux/limits.h>
 #include <stdio.h>
@@ -19,10 +20,15 @@
 #include "cmd.c"
 #include "settings.c"
 #include "zc_cstring.c"
+#include "zc_log.c"
+#include "zc_path.c"
+#include "zc_time.c"
 
-char  drag  = 0;
-char  quit  = 0;
-float scale = 1.0;
+char  drag      = 0;
+char  quit      = 0;
+float scale     = 1.0;
+char* res_path  = NULL;
+char* base_path = NULL;
 
 int32_t width  = 700;
 int32_t height = 450;
@@ -149,13 +155,6 @@ void main_init(void)
 {
     srand((unsigned int) time(NULL));
 
-    /* paths first */
-
-    char* basepath = SDL_GetPrefPath("milgra", "brawl");
-    char* respath  = cstr_new_format(PATH_MAX, "%s../res/", SDL_GetBasePath(), NULL);
-
-    printf("respath %s\n", respath);
-
     /* message bus */
 
     bus_init();
@@ -167,7 +166,7 @@ void main_init(void)
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &framebuffer);
     glGetIntegerv(GL_RENDERBUFFER_BINDING, &renderbuffer);
 
-    defaults_init(basepath, respath);
+    defaults_init(base_path, res_path);
 
     defaults.scale  = scale;
     defaults.width  = width;
@@ -201,11 +200,6 @@ void main_init(void)
     bus_notify("VIEW", "SHOWELEMENT", (void*) "menuelement");
 
     /* cleanup */
-
-    SDL_free(basepath);
-#ifndef ANDROID
-// SDL_free( respath );
-#endif
 }
 
 void main_free(void)
@@ -394,6 +388,61 @@ void main_loop(void)
 
 int main(int argc, char* argv[])
 {
+    zc_log_use_colors(isatty(STDERR_FILENO));
+    zc_log_level_info();
+    zc_time(NULL);
+
+    printf("Brawl v" BRAWL_VERSION " by Milan Toth ( www.milgra.com )\n");
+
+    const char* usage =
+	"Usage: brawl [options]\n"
+	"\n"
+	"  -h, --help                          Show help message and quit.\n"
+	"  -v                                  Increase verbosity of messages, defaults to errors and warnings only.\n"
+	"  -r --resources= [resources folder] \t use resources dir for session\n"
+	"\n";
+
+    const struct option long_options[] = {
+	{"help", no_argument, NULL, 'h'},
+	{"verbose", no_argument, NULL, 'v'},
+	{"resources", optional_argument, 0, 'r'}};
+
+    char* res_par = NULL;
+
+    int option       = 0;
+    int option_index = 0;
+
+    while ((option = getopt_long(argc, argv, "vhr:", long_options, &option_index)) != -1)
+    {
+	switch (option)
+	{
+	    case '?': printf("parsing option %c value: %s\n", option, optarg); break;
+	    case 'r': res_par = cstr_new_cstring(optarg); break; // REL 1
+	    case 'v': zc_log_inc_verbosity(); break;
+	    default: fprintf(stderr, "%s", usage); return EXIT_FAILURE;
+	}
+    }
+
+    srand((unsigned int) time(NULL));
+
+    char  cwd[PATH_MAX] = {"~"};
+    char* res           = getcwd(cwd, sizeof(cwd));
+    if (res == NULL) zc_log_error("CWD error");
+
+    char* sdl_base = SDL_GetBasePath();
+    char* wrk_path = path_new_normalize(sdl_base, NULL); // REL 6
+    SDL_free(sdl_base);
+
+    res_path = res_par ? path_new_normalize(res_par, wrk_path) : cstr_new_cstring(PKG_DATADIR); // REL 7
+
+    base_path = SDL_GetPrefPath(
+	"milgra",
+	"brawl");
+
+    // print path info to console
+
+    zc_log_debug("resource path : %s", res_path);
+    zc_log_debug("base path : %s", base_path);
 
     // enable high dpi
 
@@ -401,28 +450,19 @@ int main(int argc, char* argv[])
 
     // init audio
 
-    if (SDL_Init(SDL_INIT_AUDIO) != 0)
-    {
-
-	printf("SDL Audio init error %s\n", SDL_GetError());
-    }
+    if (SDL_Init(SDL_INIT_AUDIO) != 0) zc_log_error("SDL Audio init error %s", SDL_GetError());
 
     Uint16 audio_format   = AUDIO_S16SYS;
     int    audio_rate     = 44100;
     int    audio_channels = 1;
     int    audio_buffers  = 4096;
 
-    if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) != 0)
-    {
-
-	fprintf(stderr, "Unable to initialize audio: %s\n", Mix_GetError());
-    }
+    if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) != 0) zc_log_error("Unable to initialize audio: %s", Mix_GetError());
 
     // init sdl
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == 0)
     {
-
 	// setup opengl version
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -438,13 +478,11 @@ int main(int argc, char* argv[])
 
 	if (displaymode.w < 800 || displaymode.h < 400)
 	{
-
 	    width  = displaymode.w;
 	    height = displaymode.h;
 	}
 	else
 	{
-
 	    width  = displaymode.w * 0.8;
 	    height = displaymode.h * 0.8;
 	}
@@ -466,20 +504,14 @@ int main(int argc, char* argv[])
 
 	if (window != NULL)
 	{
-
 	    // create context
 
 	    context = SDL_GL_CreateContext(window);
 
 	    if (context != NULL)
 	    {
-
 		GLint GlewInitResult = glewInit();
-		if (GLEW_OK != GlewInitResult)
-		{
-		    printf("ERROR: %s", glewGetErrorString(GlewInitResult));
-		}
-		else printf("GLEW OKAY\n");
+		if (GLEW_OK != GlewInitResult) zc_log_error("GLEW Error %s", glewGetErrorString(GlewInitResult));
 
 		// calculate scaling
 
@@ -492,11 +524,7 @@ int main(int argc, char* argv[])
 
 		// try to set up vsync
 
-		if (SDL_GL_SetSwapInterval(1) < 0)
-		{
-
-		    printf("SDL swap interval error %s\n", SDL_GetError());
-		}
+		if (SDL_GL_SetSwapInterval(1) < 0) zc_log_error("SDL swap interval error %s", SDL_GetError());
 
 		main_init();
 		main_loop();
@@ -506,19 +534,19 @@ int main(int argc, char* argv[])
 
 		SDL_GL_DeleteContext(context);
 	    }
-	    else printf("SDL context creation error %s\n", SDL_GetError());
+	    else zc_log_error("SDL context creation error %s", SDL_GetError());
 
 	    // cleanup
 
 	    SDL_DestroyWindow(window);
 	}
-	else printf("SDL window creation error %s\n", SDL_GetError());
+	else zc_log_error("SDL window creation error %s", SDL_GetError());
 
 	// cleanup
 
 	SDL_Quit();
     }
-    else printf("SDL init error %s\n", SDL_GetError());
+    else zc_log_error("SDL init error %s", SDL_GetError());
 
     Mix_CloseAudio();
 

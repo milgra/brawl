@@ -1,3 +1,5 @@
+/* String utilities */
+
 #ifndef zc_strutil_h
 #define zc_strutil_h
 

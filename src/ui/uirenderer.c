@@ -170,7 +170,7 @@ uirenderer_t* uirenderer_alloc(float width, float height)
 
     int max_size;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
-    printf("Max texture size is : %i\n", max_size);
+    /* printf("Max texture size is : %i\n", max_size); */
     if (max_size > 4096) max_size = 4096;
 
     uirenderer->textures[0].maxsize = max_size;

@@ -111,7 +111,6 @@ element_t* menuelement_alloc(
 		// homelement->autosize.keepxcenter = 1;
 
 		element_addsubelement(itemelement, homelement);
-
 		element_setaction(itemelement, "ontouchup", item.action);
 
 		break;

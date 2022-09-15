@@ -56,8 +56,6 @@ void defaults_init(char* libpath, char* respath)
     defaults.respath  = cstr_new_cstring(respath);
     defaults.fontpath = cstr_new_format(PATH_MAX, "%s/Impact.ttf", defaults.respath);
 
-    printf("FONTPATH %s\n", defaults.fontpath);
-
     settings_init(libpath, (char*) "brawl.state");
 
     int inited = settings_getint("initialized");

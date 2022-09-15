@@ -18,22 +18,23 @@ The code is also suitable for learning purposes.
 
 ### Files
 
-buffers.c - Vertex buffers for different layers of the scene  
+audio.c - audio handling
 bus.c - Message bus for inter-module communication  
-defaults.c - Settings and defaults   
-excavator.c - Route excavator for scene  
+cmd.c - Command queue   
+defaults.c - Settings and defaults  
 file.c - Config file handling  
-floatbuffer.c - Float  collector for opengl vertex buffer  
-generator.c - Scene generator  
-levels.c - Level descriptions  
+image.c - Image loading  
 main.c - SDL handling, top level event handling  
-maincube.c - Main cube state  
-menu.c - Main menu handling  
-ogl.c - OpenGL functions  
-particle.c - Particle entity for effects
-scene.c - Scene handler
-ui.c - UI handler
-voxelutil.c - Voxel generator for labels
+pivot.c - Pivot points in the scene  
+scene.c - Scene handling
+scenerenderer.c - Scene renderer
+settings.c - Settings
+str_util.c - String utils
+view.c - View handler
+
+actor - actor handling
+gl - OpenGL handling
+math - math functions
 
 ### Tech info
 
@@ -44,6 +45,7 @@ If a module is "static" a global variable is used to store it's state, instancin
 
 ### TODO
 
+- blood not visible
 - re-write physics and collosion based on cljs-brawl  
 - add snow and other new stuff from cljs-brawl  
 - zc_util2 should show its a math lib 
