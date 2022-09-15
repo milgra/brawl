@@ -1,10 +1,4 @@
-/*
-  scene.c
-  massbrawl
-
-  Created by Milan Toth on 2016. 11. 27..
-  Copyright © 2016. Milan Toth. All rights reserved.
-*/
+/* Scene handling */
 
 #ifndef _scene_header
 #define _scene_header
@@ -117,7 +111,6 @@ void scene_pickup(actor_t* actor);
 
 void scene_init()
 {
-
     scene.state             = kSceneStateAlive;
     scene.phase             = 0.0;
     scene.game_clear        = 0;
@@ -200,7 +193,6 @@ void scene_free(void)
 
 void scene_reset()
 {
-
     vec_reset(scene.guns);
     vec_reset(scene.bloods);
     vec_reset(scene.actors);
@@ -220,7 +212,6 @@ void scene_reset()
 
 void scene_load(int levelindex)
 {
-
     /* start music */
 
     if (levelindex > 0)
@@ -548,7 +539,6 @@ void scene_load(int levelindex)
 
 void scene_remove_actor(actor_t* actor)
 {
-
     if (scene.enemygroup != NULL && actor == scene.enemygroup->actor) scene.enemygroup = NULL;
 
     for (int index = 0; index < scene.actors->length; index++)
@@ -629,7 +619,6 @@ void scene_update_scene_projection()
 
 void scene_follow_hero()
 {
-
     actor_t* hero = scene.herogroup->actor;
 
     float basex = hero->points.base_a.x + (hero->points.base_b.x - hero->points.base_a.x) / 2.0;
@@ -672,7 +661,6 @@ void scene_lines_from_segments(vec_t* segments, floatbuffer_t* vertexbuffer)
 
 void scene_update(float delta)
 {
-
     uint8_t clear = 1;
 
     /* generate new actor states */
@@ -1003,7 +991,6 @@ void scene_update(float delta)
 
 char scene_hit(attack_t* attack)
 {
-
     /* get closest enemy */
 
     float          maxdist = -1.0;
@@ -1134,7 +1121,6 @@ char scene_hit(attack_t* attack)
 
 void scene_kick(attack_t* attack)
 {
-
     /* actor_t* actor   = attack->actor; */
     char success = scene_hit(attack);
 
@@ -1206,7 +1192,6 @@ void scene_punch(attack_t* attack)
 
 void scene_shoot(attack_t* attack)
 {
-
     actor_t* actor = attack->actor;
 
     actor_group_t* group = NULL;
@@ -1351,7 +1336,6 @@ void scene_pickup(actor_t* actor)
 
 void scene_key_statechange(SDL_Keycode code, char state)
 {
-
     if (code == SDLK_LEFT) scene.control_state.left_pressed = state;
     else if (code == SDLK_RIGHT) scene.control_state.right_pressed = state;
     else if (code == SDLK_UP) scene.control_state.jump_pressed = state;
@@ -1367,7 +1351,6 @@ void scene_key_statechange(SDL_Keycode code, char state)
 
 void scene_onmessage(const char* name, void* data)
 {
-
     if (strcmp(name, "UPDATE") == 0)
     {
 

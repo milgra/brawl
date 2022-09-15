@@ -1,3 +1,4 @@
+/* View handling */
 
 #ifndef _view_header
 #define _view_header
@@ -109,7 +110,6 @@ void view_init()
 
 void view_init_controls(textstyle_t textstyle)
 {
-
     float scale  = defaults.scale;
     float width  = defaults.width;
     float height = defaults.height;
@@ -210,19 +210,6 @@ void view_init_controls(textstyle_t textstyle)
     element_addsubelement(controlsbase, downlabel);
     element_addsubelement(downlabel, downicon);
 
-#ifdef OSX
-    bulletstyle.backcolor = 0;
-    element_t* punchtext  = textelement_alloc("punchtext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'F'"), NULL, bulletstyle);
-    element_t* blocktext  = textelement_alloc("blocktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'D'"), NULL, bulletstyle);
-    element_t* kicktext   = textelement_alloc("kicktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'S'"), NULL, bulletstyle);
-    element_t* shoottext  = textelement_alloc("shoottext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'C'"), NULL, bulletstyle);
-
-    element_addsubelement(punchlabel, punchtext);
-    element_addsubelement(blocklabel, blocktext);
-    element_addsubelement(kicklabel, kicktext);
-    element_addsubelement(shootlabel, shoottext);
-#endif
-
 #if defined(IOS) || defined(ANDROID)
     element_addsubelement(view.uibase, controlsbase);
 #endif
@@ -230,7 +217,6 @@ void view_init_controls(textstyle_t textstyle)
 
 void view_init_hud(textstyle_t textstyle)
 {
-
     float scale  = defaults.scale;
     float width  = defaults.width;
     float height = defaults.height;
@@ -275,7 +261,6 @@ void view_init_hud(textstyle_t textstyle)
 
 void view_init_generator(textstyle_t textstyle)
 {
-
     textstyle_t redstyle   = textstyle;
     redstyle.backcolor     = 0xFF0000FF;
     textstyle_t bluestyle  = textstyle;
@@ -350,7 +335,6 @@ void view_init_generator(textstyle_t textstyle)
 
 void view_init_menu(textstyle_t textstyle)
 {
-
     menuitem_t mainitems[13] =
 	{
 	    (menuitem_t){
@@ -380,16 +364,12 @@ void view_init_menu(textstyle_t textstyle)
 		.type   = kMenuItemTypeButton,
 		.label  = "Buy me a coffee",
 		.color  = 0xFFFFFF11,
-		.action = "donate"}
-#if !defined(IOS) && !defined(ANDROID)
-	    ,
+		.action = "donate"},
 	    (menuitem_t){
 		.type   = kMenuItemTypeButton,
 		.label  = "Exit",
 		.color  = 0xFFFFFF11,
-		.action = "exit"}
-#endif
-	};
+		.action = "exit"}};
 
     element_t* mainelement = menuelement_alloc(
 	"menu",
@@ -440,6 +420,11 @@ void view_init_menu(textstyle_t textstyle)
 #endif
 	(menuitem_t){
 	    .type   = kMenuItemTypeButton,
+	    .label  = "Toggle controls",
+	    .color  = 0xFFFFFF11,
+	    .action = "toggle_controls"},
+	(menuitem_t){
+	    .type   = kMenuItemTypeButton,
 	    .label  = "Back",
 	    .color  = 0xFFFFFF11,
 	    .action = "back"}
@@ -453,8 +438,7 @@ void view_init_menu(textstyle_t textstyle)
 	defaults.height,
 	defaults.scale,
 	textstyle,
-
-	5,
+	6,
 	optsitems);
 
     optselement->autosize.fillx = 1;
@@ -465,7 +449,6 @@ void view_init_menu(textstyle_t textstyle)
 
 void view_init_tip(textstyle_t textstyle)
 {
-
     textstyle.backcolor = 0x00000088;
     textstyle.multiline = 1;
 
@@ -494,7 +477,6 @@ void view_init_tip(textstyle_t textstyle)
 
 void view_init_wasted(textstyle_t textstyle)
 {
-
     textstyle_t greenstyle    = textstyle;
     greenstyle.backcolor      = 0x00AA00FF;
     textstyle_t lightredstyle = textstyle;
@@ -538,7 +520,6 @@ void view_init_wasted(textstyle_t textstyle)
 
 void view_init_finished(textstyle_t textstyle)
 {
-
     float scale  = defaults.scale;
     float width  = defaults.width;
     float height = defaults.height;
@@ -577,7 +558,6 @@ void view_init_finished(textstyle_t textstyle)
 
 void view_init_completed(textstyle_t textstyle)
 {
-
     float scale  = defaults.scale;
     float width  = defaults.width;
     float height = defaults.height;
@@ -660,7 +640,6 @@ void view_updategenerator()
 
 void view_applymetrics()
 {
-
     view.hero_metrics.color_a = 0xFF0000FF;
 
     actor_t*      hero = scene.herogroup->actor;
@@ -678,7 +657,6 @@ void view_applymetrics()
 
 void view_randomizemetrics()
 {
-
     view.hero_metrics = base_metrics_random();
 
     input_t input  = {0};
@@ -695,7 +673,6 @@ void view_randomizemetrics()
 
 void view_updatemetrics(element_t* element)
 {
-
     float           value   = sliderelement_getratio(element);
     base_metrics_t* metrics = &view.hero_metrics;
 
@@ -728,7 +705,6 @@ void view_updatemetrics(element_t* element)
 
 void view_free(void)
 {
-
     REL(view.uibase);
 }
 
@@ -749,7 +725,6 @@ void view_addlevelbar(input_t* input)
 
 void view_resize()
 {
-
     element_t* menuel;
     element_t* wstdel;
     element_t* fnshel;
@@ -821,7 +796,6 @@ void view_updatemenu()
 
 void view_timer()
 {
-
     input_t input  = {0};
     input.type     = kInputTypeTimer;
     input.ticks    = defaults.ticks;
@@ -836,7 +810,6 @@ void view_timer()
 	 index < scene.actors->length;
 	 index++)
     {
-
 	actor_group_t* group = scene.actors->data[index];
 	actor_t*       actor = group->actor;
 
@@ -849,7 +822,6 @@ void view_timer()
 	    actor->points.hip.y < scene.lefttop2world.y - 50.0 &&
 	    actor->points.hip.y > scene.rightbtm2world.y + 50.0)
 	{
-
 	    v4_t point = m4_world_to_screen_coords(scene.matrix, v4_init(actor->points.head.x, actor->points.head.y, 0, 0), defaults.width, defaults.height);
 
 	    if (index > 0)
@@ -870,7 +842,6 @@ void view_timer()
 
 	    if (group->currenttext != NULL && group->bubble == NULL)
 	    {
-
 		textstyle_t textstyle = {0};
 
 		textstyle.font   = defaults.fontpath; // REL 0
@@ -946,7 +917,6 @@ void view_timer()
 
 void view_updateskill()
 {
-
     actor_t* actor = scene.herogroup->actor;
 
     int skill = actor->metrics.level;
@@ -970,7 +940,6 @@ void view_updateskill()
 
 void view_setcontrolalpha(float alpha)
 {
-
     defaults.alpharatio = alpha;
     defaults_save();
 
@@ -983,7 +952,6 @@ void view_setcontrolalpha(float alpha)
 	 index < controlbase->subelements->length;
 	 index++)
     {
-
 	element_t* element = controlbase->subelements->data[index];
 
 	solidelement_setcolor(element, color);
@@ -994,7 +962,6 @@ void view_setcontrolalpha(float alpha)
 
 void view_showelement(char* name)
 {
-
     element_t* element = MGET(view.uielements, name);
 
     if (element != NULL)
@@ -1007,7 +974,6 @@ void view_showelement(char* name)
 
 void view_hideelement(char* name)
 {
-
     element_t* element = MGET(view.uielements, name);
 
     if (element != NULL)
@@ -1020,7 +986,6 @@ void view_hideelement(char* name)
 
 void view_showwasted(str_t* text)
 {
-
     element_t* textel;
     element_t* baseel;
 
@@ -1039,7 +1004,6 @@ void view_showwasted(str_t* text)
 
 void view_showtip(char* text)
 {
-
     element_t* textel;
     element_t* baseel;
 
@@ -1080,11 +1044,9 @@ void view_showtip(char* text)
 
     cmdqueue_delay(view.cmdqueue, "hidetip", NULL, NULL, defaults.ticks + 300);
 }
-/* activate ui */
 
 void view_activate()
 {
-
     vec_reset(view.ui->visible);
 
     element_collectelements(view.uibase, v2_init(0.0, 0.0), view.ui->visible);
@@ -1169,7 +1131,6 @@ void view_ctrldown(input_t* input, element_t* element)
 
 void view_ctrlup(input_t* input, element_t* element)
 {
-
     if (strcmp(element->name, "leftlabel") == 0) scene.control_state.left_pressed = 0;
     else if (strcmp(element->name, "rightlabel") == 0) scene.control_state.right_pressed = 0;
     else if (strcmp(element->name, "uplabel") == 0) scene.control_state.jump_pressed = 0;
@@ -1192,14 +1153,12 @@ void view_ctrlup(input_t* input, element_t* element)
 
 void scene_setmusicvolume(input_t* input, element_t* element)
 {
-
     float ratio = sliderelement_getratio(element);
     bus_notify("SND", "MUSICVOLUME", &ratio);
 }
 
 void scene_setsoundvolume(input_t* input, element_t* element)
 {
-
     float ratio = sliderelement_getratio(element);
     bus_notify("SND", "SOUNDVOLUME", &ratio);
 }
@@ -1313,6 +1272,21 @@ void view_input(input_t* input)
 		view_showelement((char*) "menuelement");
 	    }
 	    // game ui
+	    else if (strcmp(command->name, "toggle_controls") == 0)
+	    {
+		element_t* ctrl = MGET(view.uielements, "controlsbase");
+
+		if (vec_index_of_data(view.uibase->subelements, ctrl) < UINT32_MAX)
+		{
+		    element_removesubelement(view.uibase, ctrl);
+		}
+		else
+		{
+		    element_addsubelement(view.uibase, ctrl);
+		}
+		view_resize();
+	    }
+
 	    else if (strcmp(command->name, "hidetip") == 0)
 	    {
 		view_hideelement((char*) "tipelement");
@@ -1374,10 +1348,8 @@ void view_input(input_t* input)
 
 void view_onmessage(const char* name, void* data)
 {
-
     if (strcmp(name, "UPDATE") == 0)
     {
-
 	cmdqueue_timer(view.cmdqueue, defaults.ticks);
 	view_timer();
 
@@ -1390,12 +1362,10 @@ void view_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "RENDER") == 0)
     {
-
 	uirenderer_draw(view.uirenderer);
     }
     else if (strcmp(name, "TOUCHDOWN") == 0)
     {
-
 	touch_t touch = *(touch_t*) data;
 
 	input_t input = {0};
@@ -1408,7 +1378,6 @@ void view_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "TOUCHUP") == 0)
     {
-
 	touch_t touch = *(touch_t*) data;
 
 	input_t input = {0};
@@ -1421,7 +1390,6 @@ void view_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "TOUCHMOVE") == 0)
     {
-
 	touch_t touch = *(touch_t*) data;
 
 	input_t input = {0};
@@ -1434,7 +1402,6 @@ void view_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "RESIZE") == 0)
     {
-
 	m4_t perspective_matrix             = m4_defaultortho(0.0, defaults.width, -defaults.height, 0.0, 0.0, 1.0);
 	perspective_matrix                  = m4_scale(perspective_matrix, 1.0, -1.0, 1.0);
 	view.uirenderer->perspective_matrix = perspective_matrix;
@@ -1446,36 +1413,30 @@ void view_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "SHOWELEMENT") == 0)
     {
-
 	view_showelement((char*) data);
 	view_activate();
     }
     else if (strcmp(name, "HIDEELEMENT") == 0)
     {
-
 	view_hideelement((char*) data);
 	view_activate();
     }
     else if (strcmp(name, "SHOWWASTED") == 0)
     {
-
 	view_showwasted((str_t*) data);
 	view_activate();
     }
     else if (strcmp(name, "SHOWTIP") == 0)
     {
-
 	view_showtip((char*) data);
 	view_activate();
     }
     else if (strcmp(name, "UPDATESKILL") == 0)
     {
-
 	view_updateskill();
     }
     else if (strcmp(name, "REMOVEHUD") == 0)
     {
-
 	actor_group_t* group = data;
 	element_t*     hud   = group->hud;
 
@@ -1484,7 +1445,6 @@ void view_onmessage(const char* name, void* data)
     }
     else if (strcmp(name, "UPDATEBULLETS") == 0)
     {
-
 	actor_group_t* group = data;
 	gun_t*         gun   = group->gun;
 

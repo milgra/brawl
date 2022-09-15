@@ -1,3 +1,4 @@
+/* Defaults and settings */
 
 #ifndef defaults_h
 #define defaults_h
@@ -96,7 +97,6 @@ void defaults_free()
 
 void defaults_reset()
 {
-
     settings_setint("initialized", 1);
 
     settings_setint("sceneindex", 0);
@@ -112,7 +112,6 @@ void defaults_reset()
 
 void defaults_save()
 {
-
     settings_setint("sceneindex", defaults.sceneindex);
     settings_setint("hudvisible", defaults.hudvisible);
 

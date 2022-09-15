@@ -1,3 +1,4 @@
+/* Image loading with stbi */
 
 #ifndef image_h
 #define image_h

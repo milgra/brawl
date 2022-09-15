@@ -1,3 +1,5 @@
+/* Audio handling */
+
 #ifndef _audio_header
 #define _audio_header
 

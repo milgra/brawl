@@ -1,3 +1,4 @@
+/* Command queue */
 
 #ifndef cmd_h
 #define cmd_h

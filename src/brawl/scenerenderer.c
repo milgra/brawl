@@ -1,3 +1,4 @@
+/* Scene rendering */
 
 #ifndef scenerenderer_h
 #define scenerenderer_h
@@ -10,7 +11,6 @@
 
 typedef struct _gamerenderdata_t
 {
-
     char           layers[10];
     char           layer;
     m4_t           matrix;
@@ -61,7 +61,6 @@ void scenerenderer_onmessage(const char* name, void* data);
 
 void scenerenderer_init(float width, float height)
 {
-
     bus_subscribe("RND", scenerenderer_onmessage);
 
     const char* uniforms[]   = {"1", "projection"};
@@ -86,7 +85,6 @@ void scenerenderer_init(float width, float height)
 
 void scenerenderer_free()
 {
-
     ogl_shader_delete(renderer.shader);
 }
 
@@ -100,7 +98,6 @@ void scenerenderer_reset()
 
 void scenerenderer_resize(float width, float height)
 {
-
     glViewport(0.0, 0.0, width, height);
 
     m4_t pers_matrix = m4_defaultortho(0.0, width, -height, 0.0, 0.0, 1.0);
@@ -115,7 +112,6 @@ void scenerenderer_resize(float width, float height)
 
 void scenerenderer_create_buffer(uint8_t layer, GLuint mode)
 {
-
     GLuint name;
 
     glGenBuffers(1, &name);
@@ -129,7 +125,6 @@ void scenerenderer_create_buffer(uint8_t layer, GLuint mode)
 
 void scenerenderer_update_buffer(uint8_t layer, floatbuffer_t* buffer)
 {
-
     renderer.vertexbufferlengths[layer] = buffer->length;
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer.vertexbuffers[layer]);
@@ -140,7 +135,6 @@ void scenerenderer_update_buffer(uint8_t layer, floatbuffer_t* buffer)
 
 void scenerenderer_render_triangles(uint8_t layer)
 {
-
     glBindBuffer(GL_ARRAY_BUFFER, renderer.vertexbuffers[layer]);
 
     ogl_enableva_f2u1();
@@ -157,7 +151,6 @@ void scenerenderer_render_triangles(uint8_t layer)
 
 void scenerenderer_render_points(uint8_t layer)
 {
-
     matrix4array_t projection;
 
     projection.matrix = renderer.perspective_matrix;
@@ -174,7 +167,6 @@ void scenerenderer_render_points(uint8_t layer)
 
 void scenerenderer_render_lines(uint8_t layer)
 {
-
     matrix4array_t projection;
 
     projection.matrix = renderer.perspective_matrix;
@@ -191,7 +183,6 @@ void scenerenderer_render_lines(uint8_t layer)
 
 void scenerenderer_render(GLuint layer)
 {
-
     GLuint mode = renderer.vertexmodes[layer];
 
     if (mode == GL_POINTS)
@@ -215,7 +206,6 @@ void scenerenderer_render(GLuint layer)
 
 void scenerenderer_onmessage(const char* name, void* data)
 {
-
     if (strcmp(name, "UPDBUFF") == 0)
     {
 

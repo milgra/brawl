@@ -1,3 +1,5 @@
+/* Settings read/write */
+
 #ifndef settings_h
 #define settings_h
 
