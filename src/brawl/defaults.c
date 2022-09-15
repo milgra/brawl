@@ -2,13 +2,13 @@
 #ifndef defaults_h
 #define defaults_h
 
-#include "font.c"
 #include "zc_cstring.c"
+#include "zc_vec2.c"
+#include <linux/limits.h>
 #include <stdlib.h>
 
 typedef struct _defaults_t
 {
-
     char debug_mode;
 
     int effects_level;
@@ -23,7 +23,6 @@ typedef struct _defaults_t
     // runtime
 
     v2_t     gravity;
-    font_t*  font;
     uint32_t ticks;
 
     float scale;
@@ -32,6 +31,7 @@ typedef struct _defaults_t
 
     char* libpath;
     char* respath;
+    char* fontpath;
 
     char donation_arrived;
     char prices_arrived;
@@ -56,9 +56,11 @@ defaults_t defaults = {0};
 
 void defaults_init(char* libpath, char* respath)
 {
+    defaults.libpath  = cstr_new_cstring(libpath);
+    defaults.respath  = cstr_new_cstring(respath);
+    defaults.fontpath = cstr_new_format(PATH_MAX, "%s/Impact.ttf", defaults.respath);
 
-    defaults.libpath = cstr_new_cstring(libpath);
-    defaults.respath = cstr_new_cstring(respath);
+    printf("FONTPATH %s\n", defaults.fontpath);
 
     settings_init(libpath, (char*) "brawl.state");
 
@@ -98,8 +100,6 @@ void defaults_init(char* libpath, char* respath)
 
 void defaults_free()
 {
-
-    REL(defaults.font);
 }
 
 void defaults_reset()

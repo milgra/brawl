@@ -12,7 +12,6 @@
 typedef struct _touch_t touch_t;
 struct _touch_t
 {
-
     char* id;
     float x;
     float y;
@@ -21,7 +20,6 @@ struct _touch_t
 typedef struct _view_t view_t;
 struct _view_t
 {
-
     ui_t*         ui;
     element_t*    uibase;
     map_t*        uielements;
@@ -48,6 +46,7 @@ void view_free(void);
 #include "scene.c"
 #include "sliderelement.c"
 #include "zc_cstring.c"
+#include "zc_text.c"
 #include <linux/limits.h>
 
 view_t view;
@@ -69,24 +68,35 @@ void view_init_tip(textstyle_t textstyle);
 
 void view_init()
 {
-
     bus_subscribe("VIEW", view_onmessage);
 
-    textstyle_t textstyle =
-	{
-	    .align      = 1,
-	    .editable   = 0,
-	    .selectable = 0,
-	    .multiline  = 0,
-	    .autosize   = 0,
-	    .uppercase  = 0,
+    text_init();
 
-	    .textsize   = 30.0 * defaults.scale,
-	    .marginsize = 5.0 * defaults.scale,
-	    .cursorsize = 0.0,
+    /* textstyle_t textstyle = */
+    /* 	{ */
+    /* 	    .align      = 1, */
+    /* 	    .editable   = 0, */
+    /* 	    .selectable = 0, */
+    /* 	    .multiline  = 0, */
+    /* 	    .autosize   = 0, */
+    /* 	    .uppercase  = 0, */
 
-	    .textcolor = 0xFFFFFFFF,
-	    .backcolor = 0xFFFFFF55};
+    /* 	    .textsize   = 30.0 * defaults.scale, */
+    /* 	    .marginsize = 5.0 * defaults.scale, */
+    /* 	    .cursorsize = 0.0, */
+
+    /* 	    .textcolor = 0xFFFFFFFF, */
+    /* 	    .backcolor = 0xFFFFFF55}; */
+
+    textstyle_t textstyle = {0};
+
+    textstyle.font   = defaults.fontpath; // REL 0
+    textstyle.size   = 30.0 * defaults.scale;
+    textstyle.align  = TA_CENTER;
+    textstyle.margin = (int) 5.0 * defaults.scale;
+
+    textstyle.textcolor = 0xFFFFFFFF;
+    textstyle.backcolor = 0xFFFFFF55;
 
     view.ui           = ui_alloc(100.0);
     view.uibase       = element_alloc("base", "base", 0, 0, defaults.width, defaults.height, NULL);
@@ -122,7 +132,7 @@ void view_init_controls(textstyle_t textstyle)
 
     textstyle_t bulletstyle = textstyle;
     bulletstyle.align       = 1;
-    bulletstyle.marginsize  = 0.0;
+    bulletstyle.margin      = 0;
 
     element_t* controlsbase = solidelement_alloc("controlsbase", 0, 0, width, height, 0x00000000);
 
@@ -218,10 +228,10 @@ void view_init_controls(textstyle_t textstyle)
 
 #ifdef OSX
     bulletstyle.backcolor = 0;
-    element_t* punchtext  = textelement_alloc("punchtext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'F'"), NULL, defaults.font, bulletstyle);
-    element_t* blocktext  = textelement_alloc("blocktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'D'"), NULL, defaults.font, bulletstyle);
-    element_t* kicktext   = textelement_alloc("kicktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'S'"), NULL, defaults.font, bulletstyle);
-    element_t* shoottext  = textelement_alloc("shoottext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'C'"), NULL, defaults.font, bulletstyle);
+    element_t* punchtext  = textelement_alloc("punchtext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'F'"), NULL, bulletstyle);
+    element_t* blocktext  = textelement_alloc("blocktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'D'"), NULL, bulletstyle);
+    element_t* kicktext   = textelement_alloc("kicktext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'S'"), NULL, bulletstyle);
+    element_t* shoottext  = textelement_alloc("shoottext", 0, 0, 40 * scale, 40 * scale, str_frombytes("'C'"), NULL, bulletstyle);
 
     element_addsubelement(punchlabel, punchtext);
     element_addsubelement(blocklabel, blocktext);
@@ -241,11 +251,11 @@ void view_init_hud(textstyle_t textstyle)
     float width  = defaults.width;
     float height = defaults.height;
 
-    element_t* hudbar = hudbarelement_alloc("hudbar", width / 2.0 - 250.0 * scale, height - 50.0 * scale, 500.0 * scale, 40.0 * scale, scale, defaults.font);
+    element_t* hudbar = hudbarelement_alloc("hudbar", width / 2.0 - 250.0 * scale, height - 50.0 * scale, 500.0 * scale, 40.0 * scale, scale);
 
     element_t* levelbar   = sliderelement_alloc("skillbar", 0.0 * scale, 0.0 * scale, 140 * scale, 40.0 * scale, 0x00AA00FF, 0x000000FF, 0, 0);
-    element_t* leveltext  = textelement_alloc("skilltext", 0, 0, 140 * scale, 40 * scale, NULL, NULL, defaults.font, textstyle);
-    element_t* menubutton = textelement_alloc("menubutton", width - 300.0 * scale, 0.0 * scale, 140 * scale, 40.0 * scale, str_frombytes("Menu"), NULL, defaults.font, textstyle);
+    element_t* leveltext  = textelement_alloc("skilltext", 0, 0, 140 * scale, 40 * scale, NULL, NULL, textstyle);
+    element_t* menubutton = textelement_alloc("menubutton", width - 300.0 * scale, 0.0 * scale, 140 * scale, 40.0 * scale, str_frombytes("Menu"), NULL, textstyle);
 
     MPUT(view.uielements, "hudbar", hudbar);
     MPUT(view.uielements, "levelbar", levelbar);
@@ -271,9 +281,9 @@ void view_init_hud(textstyle_t textstyle)
 
     textstyle_t bulletstyle = textstyle;
     bulletstyle.align       = 1;
-    bulletstyle.marginsize  = 0.0;
+    bulletstyle.margin      = 0;
 
-    element_t* bullettext = textelement_alloc("bullettext", hudbar->width / 2.0 - 20.0 * scale, 0, 40 * scale, 40 * scale, str_frombytes("0"), NULL, defaults.font, bulletstyle);
+    element_t* bullettext = textelement_alloc("bullettext", hudbar->width / 2.0 - 20.0 * scale, 0, 40 * scale, 40 * scale, str_frombytes("0"), NULL, bulletstyle);
 
     MPUT(view.uielements, "bullettext", bullettext);
     element_addsubelement(hudbar, bullettext);
@@ -302,17 +312,17 @@ void view_init_generator(textstyle_t textstyle)
     paramsbox->autosize.keepxcenter = 1;
 
     element_t* hitpowerbar  = sliderelement_alloc("hitpowerbar", 0 * scale, 2 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* hitpowertext = textelement_alloc("hitpowertext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Hitpower"), NULL, defaults.font, textstyle);
+    element_t* hitpowertext = textelement_alloc("hitpowertext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Hitpower"), NULL, textstyle);
     element_t* hitratebar   = sliderelement_alloc("hitratebar", 0 * scale, 44 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* hitratetext  = textelement_alloc("hitratetext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Hitrate"), NULL, defaults.font, textstyle);
+    element_t* hitratetext  = textelement_alloc("hitratetext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Hitrate"), NULL, textstyle);
     element_t* heightbar    = sliderelement_alloc("heightbar", 202 * scale, 2 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* heighttext   = textelement_alloc("heighttext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Height"), NULL, defaults.font, textstyle);
+    element_t* heighttext   = textelement_alloc("heighttext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Height"), NULL, textstyle);
     element_t* staminabar   = sliderelement_alloc("staminabar", 404 * scale, 2 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* staminatext  = textelement_alloc("staminatext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Stamina"), NULL, defaults.font, textstyle);
+    element_t* staminatext  = textelement_alloc("staminatext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Stamina"), NULL, textstyle);
     element_t* speedbar     = sliderelement_alloc("speedbar", 404 * scale, 44 * scale, 200 * scale, 40 * scale, 0x00AA00FF, 0x000000FF, 1, 1);
-    element_t* speedtext    = textelement_alloc("speedtext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Speed"), NULL, defaults.font, textstyle);
-    element_t* randombutton = textelement_alloc("randombutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Randomize"), NULL, defaults.font, greenstyle);
-    element_t* startbutton  = textelement_alloc("startbutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Start Game"), NULL, defaults.font, redstyle);
+    element_t* speedtext    = textelement_alloc("speedtext", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Speed"), NULL, textstyle);
+    element_t* randombutton = textelement_alloc("randombutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Randomize"), NULL, greenstyle);
+    element_t* startbutton  = textelement_alloc("startbutton", 0 * scale, 0 * scale, 200 * scale, 40 * scale, str_frombytes("Start Game"), NULL, redstyle);
 
     randombutton->autosize.keepxcenter  = 1;
     randombutton->autosize.bottommargin = 100.0 * scale;
@@ -405,7 +415,7 @@ void view_init_menu(textstyle_t textstyle)
 	defaults.height,
 	defaults.scale,
 	textstyle,
-	defaults.font,
+
 	7,
 	mainitems);
 
@@ -460,7 +470,7 @@ void view_init_menu(textstyle_t textstyle)
 	defaults.height,
 	defaults.scale,
 	textstyle,
-	defaults.font,
+
 	5,
 	optsitems);
 
@@ -498,21 +508,15 @@ void view_init_donations()
 
 	};
 
-    textstyle_t textstyle =
-	{
-	    .align      = 1,
-	    .editable   = 0,
-	    .selectable = 0,
-	    .multiline  = 0,
-	    .autosize   = 0,
-	    .uppercase  = 0,
+    textstyle_t textstyle = {0};
 
-	    .textsize   = 30.0 * defaults.scale,
-	    .marginsize = 5.0 * defaults.scale,
-	    .cursorsize = 0.0,
+    textstyle.font   = defaults.fontpath; // REL 0
+    textstyle.size   = 30.0 * defaults.scale;
+    textstyle.align  = TA_CENTER;
+    textstyle.margin = (int) 5.0 * defaults.scale;
 
-	    .textcolor = 0xFFFFFFFF,
-	    .backcolor = 0xFFFFFF55};
+    textstyle.textcolor = 0xFFFFFFFF;
+    textstyle.backcolor = 0xFFFFFF55;
 
     element_t* dntselement = menuelement_alloc(
 	"dons",
@@ -522,7 +526,7 @@ void view_init_donations()
 	defaults.height,
 	defaults.scale,
 	textstyle,
-	defaults.font,
+
 	4,
 	dntsitems);
 
@@ -535,7 +539,6 @@ void view_init_donations()
     resizeinput.floata   = defaults.width;
     resizeinput.floatb   = defaults.height;
     resizeinput.type     = kInputTypeResize;
-    resizeinput.font     = defaults.font;
     resizeinput.ticks    = defaults.ticks;
     resizeinput.scale    = defaults.scale;
     resizeinput.cmdqueue = view.cmdqueue;
@@ -555,7 +558,7 @@ void view_init_tip(textstyle_t textstyle)
     str_t* str = str_frombytes("INFO");
 
     element_t* tipelement = solidelement_alloc("tipelement", 0, 0, width, height, 0);
-    element_t* tiptext    = textelement_alloc("tiptext", 0, 100.0, width, 100, str, NULL, defaults.font, textstyle);
+    element_t* tiptext    = textelement_alloc("tiptext", 0, 100.0, width, 100, str, NULL, textstyle);
 
     REL(str);
 
@@ -589,9 +592,9 @@ void view_init_wasted(textstyle_t textstyle)
     str_t* restartstr = str_frombytes("Restart");
 
     element_t* wastedelement = solidelement_alloc("wastedelement", 0, 0, width, height, 0xAA0000CC);
-    element_t* wastedinfo    = textelement_alloc("wastedinfo", 0, 50.0, width, 40, infostr, NULL, defaults.font, textstyle);
-    element_t* wastedtext    = textelement_alloc("wastedtext", 0, 0, width, 150, wastedstr, NULL, defaults.font, lightredstyle);
-    element_t* wastedbutton  = textelement_alloc("wastedbutton", 0, 0, width, 40.0, restartstr, NULL, defaults.font, greenstyle);
+    element_t* wastedinfo    = textelement_alloc("wastedinfo", 0, 50.0, width, 40, infostr, NULL, textstyle);
+    element_t* wastedtext    = textelement_alloc("wastedtext", 0, 0, width, 150, wastedstr, NULL, lightredstyle);
+    element_t* wastedbutton  = textelement_alloc("wastedbutton", 0, 0, width, 40.0, restartstr, NULL, greenstyle);
 
     element_setaction(wastedbutton, "ontouchup", "resetlevel");
 
@@ -633,8 +636,8 @@ void view_init_finished(textstyle_t textstyle)
     str_t* nextstr      = str_frombytes("Next Level");
 
     element_t* finishedelement = solidelement_alloc("finishedelement", 0, 0, width, height, 0x00FF00CC);
-    element_t* finishedtext    = textelement_alloc("finishedtext", 0, 0, width, 150, completedstr, NULL, defaults.font, lightgreenstyle);
-    element_t* finishedbutton  = textelement_alloc("finishedbutton", 0, 0, width, 40.0, nextstr, NULL, defaults.font, greenstyle);
+    element_t* finishedtext    = textelement_alloc("finishedtext", 0, 0, width, 150, completedstr, NULL, lightgreenstyle);
+    element_t* finishedbutton  = textelement_alloc("finishedbutton", 0, 0, width, 40.0, nextstr, NULL, greenstyle);
 
     element_addsubelement(finishedelement, finishedtext);
     element_addsubelement(finishedelement, finishedbutton);
@@ -685,9 +688,9 @@ void view_init_completed(textstyle_t textstyle)
     str_t* restartstr = str_frombytes("Restart");
 
     element_t* completedelement       = solidelement_alloc("completedelement", 0, 0, width, height, 0x0000FFCC);
-    element_t* completedtext          = textelement_alloc("completedtext", 0, 0, width, 150, gamestr, NULL, defaults.font, lightbluestyle);
-    element_t* completedrestartbutton = textelement_alloc("completedrestartbutton", 0, 0, width, 40.0, restartstr, NULL, defaults.font, bluestyle);
-    element_t* completedresetbutton   = textelement_alloc("completedresetbutton", 0, 0, width, 40.0, resetstr, NULL, defaults.font, bluestyle);
+    element_t* completedtext          = textelement_alloc("completedtext", 0, 0, width, 150, gamestr, NULL, lightbluestyle);
+    element_t* completedrestartbutton = textelement_alloc("completedrestartbutton", 0, 0, width, 40.0, restartstr, NULL, bluestyle);
+    element_t* completedresetbutton   = textelement_alloc("completedresetbutton", 0, 0, width, 40.0, resetstr, NULL, bluestyle);
 
     element_addsubelement(completedelement, completedtext);
     element_addsubelement(completedelement, completedresetbutton);
@@ -719,7 +722,6 @@ void view_updategenerator()
 {
     input_t input  = {0};
     input.type     = kInputTypeUpdate;
-    input.font     = defaults.font;
     input.ticks    = defaults.ticks;
     input.scale    = defaults.scale;
     input.cmdqueue = view.cmdqueue;
@@ -764,7 +766,6 @@ void view_randomizemetrics()
 
     input_t input  = {0};
     input.type     = kInputTypeUpdate;
-    input.font     = defaults.font;
     input.ticks    = defaults.ticks;
     input.scale    = defaults.scale;
     input.cmdqueue = view.cmdqueue;
@@ -797,7 +798,6 @@ void view_updatemetrics(element_t* element)
 
     input_t input  = {0};
     input.type     = kInputTypeUpdate;
-    input.font     = defaults.font;
     input.ticks    = defaults.ticks;
     input.scale    = defaults.scale;
     input.cmdqueue = view.cmdqueue;
@@ -819,7 +819,7 @@ void view_free(void)
 
 void view_addbubble(input_t* input)
 {
-    // element_t* textbubble = textelement_alloc( "textbubble", 0, 0 , 300, 50, greenstyle, defaults.font, str_frombytes("TEXT BUBBLE"), NULL, 0.0 );
+    // element_t* textbubble = textelement_alloc( "textbubble", 0, 0 , 300, 50, greenstyle,  str_frombytes("TEXT BUBBLE"), NULL, 0.0 );
 }
 
 /* add level bar over actor */
@@ -857,7 +857,6 @@ void view_resize()
     resizeinput.floata   = defaults.width;
     resizeinput.floatb   = defaults.height;
     resizeinput.type     = kInputTypeResize;
-    resizeinput.font     = defaults.font;
     resizeinput.ticks    = defaults.ticks;
     resizeinput.scale    = defaults.scale;
     resizeinput.cmdqueue = view.cmdqueue;
@@ -881,7 +880,6 @@ void view_updatemenu()
 {
     input_t input  = {0};
     input.type     = kInputTypeUpdate;
-    input.font     = defaults.font;
     input.ticks    = defaults.ticks;
     input.scale    = defaults.scale;
     input.cmdqueue = view.cmdqueue;
@@ -909,7 +907,6 @@ void view_timer()
 
     input_t input  = {0};
     input.type     = kInputTypeTimer;
-    input.font     = defaults.font;
     input.ticks    = defaults.ticks;
     input.scale    = defaults.scale;
     input.cmdqueue = view.cmdqueue;
@@ -957,23 +954,17 @@ void view_timer()
 	    if (group->currenttext != NULL && group->bubble == NULL)
 	    {
 
-		textstyle_t textstyle =
-		    {
-			.align      = 1,
-			.editable   = 0,
-			.selectable = 0,
-			.multiline  = 0,
-			.autosize   = 1,
-			.uppercase  = 0,
+		textstyle_t textstyle = {0};
 
-			.textsize   = 20.0 * defaults.scale,
-			.marginsize = 0.0 * defaults.scale,
-			.cursorsize = 0.0,
+		textstyle.font   = defaults.fontpath; // REL 0
+		textstyle.size   = 20.0 * defaults.scale;
+		textstyle.align  = TA_CENTER;
+		textstyle.margin = (int) 5.0 * defaults.scale;
 
-			.textcolor = 0x000000FF,
-			.backcolor = 0xFFFFFF88};
+		textstyle.textcolor = 0x000000FF;
+		textstyle.backcolor = 0xFFFFFF88;
 
-		element_t* element = textelement_alloc("bubble", 0, 0, 100.0, 20.0, group->currenttext, NULL, defaults.font, textstyle);
+		element_t* element = textelement_alloc("bubble", 0, 0, 100.0, 20.0, group->currenttext, NULL, textstyle);
 
 		actor_group_setbubble(group, element);
 
@@ -1053,7 +1044,7 @@ void view_updateskill()
     str_t* texts  = str_new();
     str_add_bytearray(texts, textcs);
 
-    textelement_settext(leveltext, defaults.font, view.cmdqueue, texts);
+    textelement_settext(leveltext, view.cmdqueue, texts);
 
     REL(texts);
 }
@@ -1119,7 +1110,7 @@ void view_showwasted(str_t* text)
     textel = MGET(view.uielements, "wastedinfo");
     baseel = MGET(view.uielements, "wastedelement");
 
-    textelement_settext(textel, defaults.font, view.cmdqueue, text);
+    textelement_settext(textel, view.cmdqueue, text);
 
     if (baseel != NULL)
     {
@@ -1165,7 +1156,7 @@ void view_showtip(char* text)
 
     str_t* str = str_frombytes(text);
 
-    textelement_settext(textel, defaults.font, view.cmdqueue, str);
+    textelement_settext(textel, view.cmdqueue, str);
 
     REL(str);
 
@@ -1312,7 +1303,6 @@ void view_input(input_t* input)
 {
     static char inloop = 0;
 
-    input->font     = defaults.font;
     input->ticks    = defaults.ticks;
     input->scale    = defaults.scale;
     input->cmdqueue = view.cmdqueue;
@@ -1627,7 +1617,7 @@ void view_onmessage(const char* name, void* data)
 
 	str_t* text = str_frombytes(intstring);
 
-	textelement_settext(bullettext, defaults.font, view.cmdqueue, text);
+	textelement_settext(bullettext, view.cmdqueue, text);
 
 	REL(text);
     }

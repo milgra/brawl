@@ -166,7 +166,7 @@ void scene_init()
 
     actor_ai_t*   heroai   = actor_ai_alloc(hero, 0xFF0000FF, 0.0);
     actor_skin_t* heroskin = actor_skin_alloc();
-    element_t*    hud      = actor_hud_element_alloc("HERO", 0xFF0000FF, defaults.scale, defaults.font);
+    element_t*    hud      = actor_hud_element_alloc("HERO", 0xFF0000FF, defaults.scale);
 
     scene.herogroup = actor_group_alloc(hero, heroskin, heroai);
 
@@ -506,7 +506,7 @@ void scene_load(int levelindex)
 
 		if (color != hero->metrics.color) name = "";
 
-		element_t* hud = actor_hud_element_alloc(name, color, defaults.scale, defaults.font);
+		element_t* hud = actor_hud_element_alloc(name, color, defaults.scale);
 
 		actor_group_sethud(group, hud);
 

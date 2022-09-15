@@ -3,6 +3,7 @@
 
 #include "element.c"
 #include "vectoranimator.c"
+#include "zc_text.c"
 #include <stdio.h>
 
 #define kNotifierStateAppear 0
@@ -25,8 +26,7 @@ element_t* notifierelement_alloc(
     float       y,
     float       width,
     float       height,
-    textstyle_t style,
-    font_t*     font);
+    textstyle_t style);
 
 void notifierelement_queuemessage(element_t* element, str_t* message, input_t* input);
 
@@ -51,12 +51,11 @@ element_t* notifierelement_alloc(
     float       y,
     float       width,
     float       height,
-    textstyle_t style,
-    font_t*     font)
+    textstyle_t style)
 {
 
     element_t* element       = element_alloc("generic", name, x, y, width, height, NULL);
-    element_t* messagelement = textelement_alloc("notifelement", 0, 0, width, height, NULL, NULL, font, style);
+    element_t* messagelement = textelement_alloc("notifelement", 0, 0, width, height, NULL, NULL, style);
 
     notifierdata_t* data = CAL(sizeof(notifierdata_t), notifierdata_dealloc, NULL);
 
@@ -98,7 +97,7 @@ void notifierelement_next(element_t* element, input_t* input)
 
     str_t* message = vec_head(data->messagequeue);
 
-    textelement_settext(data->messageelement, input->font, input->cmdqueue, message);
+    textelement_settext(data->messageelement, input->cmdqueue, message);
 
     element_addsubelement(element, data->messageelement);
 

@@ -174,10 +174,6 @@ void main_init(void)
     defaults.width  = width;
     defaults.height = height;
 
-    char* fontpath = cstr_new_format(PATH_MAX, "%s/Impact.ttf", defaults.respath, NULL);
-    defaults.font  = font_alloc(fontpath);
-    REL(fontpath);
-
     /* bridges should be inited after defaults because scaling is set up there */
 
     /* request donation prices from app store, init text scaling, init glfw */
@@ -186,8 +182,8 @@ void main_init(void)
 
     /* build up view */
 
-    scene_init();
     view_init();
+    scene_init();
     audio_init(defaults.respath);
 
     /* update projection matrices */

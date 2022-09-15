@@ -2,10 +2,9 @@
 #define text_element_h
 
 #include "element.c"
-#include "font.c"
 #include "input.h"
-#include "text.c"
 #include "zc_string.c"
+#include "zc_text.c"
 #include <stdio.h>
 
 typedef struct _cursor_t
@@ -24,10 +23,8 @@ typedef struct _textdata_t
     str_t* string; /* visible string */
     str_t* prompt; /* prompt string if normal string is not available */
 
-    cursor_t         cursor;
-    textstyle_t      style;     /* element's style */
-    glyphmetrics_t*  metrics;   /* metrics of visible glyphs, 0 index is empty */
-    textselection_t* selection; /* current selection of text element */
+    cursor_t    cursor;
+    textstyle_t style; /* element's style */
 
     vec_t* selections; /* special selections ( hyperlink , etc ) */
 
@@ -49,14 +46,13 @@ element_t* textelement_alloc(
     float       height,
     str_t*      string,
     str_t*      prompt,
-    font_t*     font,
     textstyle_t text);
 
-void textelement_clear(element_t* element, font_t* font, float scale, cmdqueue_t* cmdqueue);
+void textelement_clear(element_t* element, float scale, cmdqueue_t* cmdqueue);
 
-void textelement_resize(element_t* element, float width, float height, font_t* font, cmdqueue_t* cmdqueue);
+void textelement_resize(element_t* element, float width, float height, cmdqueue_t* cmdqueue);
 
-void textelement_settext(element_t* element, font_t* font, cmdqueue_t* cmdqueue, str_t* string);
+void textelement_settext(element_t* element, cmdqueue_t* cmdqueue, str_t* string);
 
 void textelement_addtext(element_t* element, input_t* input);
 
@@ -69,8 +65,8 @@ void textelement_addtext(element_t* element, input_t* input);
 #include <string.h>
 
 void textdata_dealloc(void* pointer);
-void textelement_updatetext(element_t* element, font_t* font, cmdqueue_t* cmdqueue);
-void textelement_realdelete(element_t* element, font_t* font, cmdqueue_t* cmdqueue);
+void textelement_updatetext(element_t* element, cmdqueue_t* cmdqueue);
+void textelement_realdelete(element_t* element, cmdqueue_t* cmdqueue);
 void textelement_input(element_t* element, input_t* input);
 
 /* alloc text element */
@@ -83,7 +79,6 @@ element_t* textelement_alloc(
     float       height,
     str_t*      string,
     str_t*      prompt,
-    font_t*     font,
     textstyle_t text)
 {
     element_t*  element = element_alloc("text", name, x, y, width, height, NULL);
@@ -95,43 +90,17 @@ element_t* textelement_alloc(
 
     /* initial fillup */
 
-    float scale = stbtt_ScaleForPixelHeight(&(font->info), text.textsize);
-    float desc  = font->descent * scale;
-    float asc   = font->ascent * scale;
-    float max   = asc - desc;
-
-    data->ascent       = asc;
+    data->ascent       = 0;
     data->cursor.index = 0;
     data->selections   = VNEW();
-    data->metrics      = CAL(sizeof(glyphmetrics_t), NULL, NULL);
 
     element->input = textelement_input;
-
-    if (text.editable == 1)
-    {
-	data->mask           = solidelement_alloc("mask", 0.0, 0.0, width, max, text.backcolor);
-	data->cursor.element = solidelement_alloc("cursor", 0.0, 0.0, data->style.cursorsize, max, 0x000000FF);
-
-	data->mask->translation           = &data->maskpos;
-	data->cursor.element->translation = &data->cursor.curspos;
-    }
-
-    if (text.selectable == 1)
-    {
-	textselection_t* selection = CAL(sizeof(textselection_t), NULL, NULL);
-	selection->startindex      = 0;
-	selection->endindex        = 0;
-	selection->backcolor       = 0x000000FF;
-	selection->textcolor       = 0xFFFFFFFF;
-
-	data->selection = selection;
-    }
 
     element_setdata(element, data);
 
     REL(data);
 
-    textelement_updatetext(element, font, NULL);
+    textelement_updatetext(element, NULL);
 
     return element;
 }
@@ -143,7 +112,6 @@ void textdata_dealloc(void* pointer)
     textdata_t* data = pointer;
     REL(data->string);
     REL(data->prompt);
-    REL(data->metrics);
     REL(data->selections);
 }
 
@@ -151,7 +119,6 @@ void textdata_dealloc(void* pointer)
 
 void textelement_clear(
     element_t*  element,
-    font_t*     font,
     float       scale,
     cmdqueue_t* cmdqueue)
 {
@@ -163,19 +130,19 @@ void textelement_clear(
     vec_reset(data->selections);
 
     data->cursor.index = 0;
-    textelement_updatetext(element, font, cmdqueue);
+    textelement_updatetext(element, cmdqueue);
 }
 
 /* resize text element */
 
-void textelement_resize(element_t* element, float width, float height, font_t* font, cmdqueue_t* cmdqueue)
+void textelement_resize(element_t* element, float width, float height, cmdqueue_t* cmdqueue)
 {
-    textelement_updatetext(element, font, cmdqueue);
+    textelement_updatetext(element, cmdqueue);
 }
 
 /* sets text */
 
-void textelement_settext(element_t* element, font_t* font, cmdqueue_t* cmdqueue, str_t* string)
+void textelement_settext(element_t* element, cmdqueue_t* cmdqueue, str_t* string)
 {
     textdata_t* data = element->data;
 
@@ -187,7 +154,7 @@ void textelement_settext(element_t* element, font_t* font, cmdqueue_t* cmdqueue,
     vec_reset(data->selections);
 
     data->cursor.index = 0;
-    textelement_updatetext(element, font, cmdqueue);
+    textelement_updatetext(element, cmdqueue);
 }
 
 /* adds text */
@@ -196,43 +163,15 @@ void textelement_addtext(element_t* element, input_t* input)
 {
     textdata_t* data = element->data;
 
-    if (data->style.uppercase == 1)
-    {
-	for (int index = 0; index < strlen(input->stringa); index++)
-	{
-	    if (input->stringa[index] >= 97 && input->stringa[index] <= 122) input->stringa[index] -= 32;
-	}
-    }
+    str_add_bytearray(data->string, input->stringa);
+    data->cursor.index = data->string->length;
 
-    if (data->selection != NULL && data->selection->startindex != data->selection->endindex)
-    {
-	str_t* string      = str_frombytes(input->stringa);
-	str_t* newstring   = str_new_replace(data->string, string, data->selection->startindex, data->selection->endindex);
-	data->cursor.index = data->selection->startindex + string->length;
-	mem_release_each(string, data->string, NULL);
-	data->string                = newstring;
-	data->selection->startindex = data->selection->endindex;
-    }
-    else if (data->cursor.index < data->string->length - 1 && data->string->length > 0)
-    {
-	str_t* string    = str_frombytes(input->stringa);
-	str_t* newstring = str_new_replace(data->string, string, data->cursor.index, data->cursor.index);
-	data->cursor.index += string->length;
-	mem_release_each(string, data->string, NULL);
-	data->string = newstring;
-    }
-    else
-    {
-	str_add_bytearray(data->string, input->stringa);
-	data->cursor.index = data->string->length;
-    }
-
-    textelement_updatetext(element, input->font, input->cmdqueue);
+    textelement_updatetext(element, input->cmdqueue);
 }
 
 /* deletes last character */
 
-void textelement_realdelete(element_t* element, font_t* font, cmdqueue_t* cmdqueue)
+void textelement_realdelete(element_t* element, cmdqueue_t* cmdqueue)
 {
     textdata_t* data = element->data;
 
@@ -246,29 +185,18 @@ void textelement_realdelete(element_t* element, font_t* font, cmdqueue_t* cmdque
 	else str_remove_codepoint_at_index(data->string, data->string->length - 1);
     }
 
-    textelement_updatetext(element, font, cmdqueue);
+    textelement_updatetext(element, cmdqueue);
 }
 
 /* updates cursor */
 
 void textelement_updatecursor(element_t* element)
 {
-    textdata_t* data = element->data;
-
-    if (data->style.editable == 1)
-    {
-	if (data->cursor.index > -1 && data->cursor.index <= data->string->length)
-	{
-	    glyphmetrics_t* metrics  = &data->metrics[data->cursor.index];
-	    data->cursor.targetpos.x = metrics->x + metrics->width;
-	    data->cursor.targetpos.y = metrics->y - data->ascent;
-	}
-    }
 }
 
 /* updates text */
 
-void textelement_updatetext(element_t* element, font_t* font, cmdqueue_t* cmdqueue)
+void textelement_updatetext(element_t* element, cmdqueue_t* cmdqueue)
 {
     textdata_t* data = element->data;
 
@@ -277,36 +205,14 @@ void textelement_updatetext(element_t* element, font_t* font, cmdqueue_t* cmdque
 
     str_t* string = data->string;
 
-    if (data->string->length > 0)
-    {
-	str_t*   linktoken  = str_frombytes("http://");
-	str_t*   spacetoken = str_frombytes(" ");
-	uint32_t index      = str_find(string, linktoken, 0);
-
-	while (index < UINT32_MAX)
-	{
-	    uint32_t spaceindex = str_find(string, spacetoken, index);
-	    if (spaceindex == UINT32_MAX) spaceindex = data->string->length;
-
-	    textselection_t* selection = CAL(sizeof(textselection_t), NULL, NULL);
-	    selection->startindex      = index;
-	    selection->endindex        = spaceindex;
-	    selection->textcolor       = 0x0000FFFF;
-	    selection->backcolor       = 0xFFFF00FF;
-
-	    VADD(data->selections, selection);
-
-	    index = str_find(string, linktoken, index + 1);
-	}
-
-	REL(linktoken);
-	REL(spacetoken);
-    }
-
     if (data->string->length == 0 && element->focused == 0) string = data->prompt;
 
-    data->metrics     = mem_realloc(data->metrics, sizeof(glyphmetrics_t) * (string->length + 2));
-    bm_rgba_t* bitmap = font_render_text(element->width + 1, element->height + 1, string, font, data->style, data->metrics, data->selections);
+    /* data->metrics = mem_realloc(data->metrics, sizeof(glyphmetrics_t) * (string->length + 2)); */
+
+    /* bm_rgba_t* bitmap = font_render_text(element->width + 1, element->height + 1, string, font, data->style, data->metrics, data->selections); */
+
+    bm_rgba_t* bitmap = bm_rgba_new(element->width + 1, element->height + 1);
+    text_render(string, data->style, bitmap);
 
     if (bitmap != NULL)
     {
@@ -332,16 +238,6 @@ void textelement_updatetext(element_t* element, font_t* font, cmdqueue_t* cmdque
 
 float getborder_for_coordinate(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
-    float x = input->floata - element->finalx;
-    // float y = input->floatb - element->finaly;
-
-    for (int index = 0; index < data->string->length; index++)
-    {
-	glyphmetrics_t* metrics = &data->metrics[index + 1];
-	if (x < metrics->x) return metrics->x;
-    }
     return 0.0;
 }
 
@@ -362,8 +258,8 @@ int getindex_for_coordinate(element_t* element, input_t* input)
 
     for (int index = 0; index < data->string->length; index++)
     {
-	glyphmetrics_t* metrics = &data->metrics[index + 1];
-	if (x < metrics->x && y < metrics->y) return index;
+	/* glyphmetrics_t* metrics = &data->metrics[index + 1]; */
+	/* if (x < metrics->x && y < metrics->y) return index; */
     }
     return data->string->length;
 }
@@ -372,49 +268,6 @@ int getindex_for_coordinate(element_t* element, input_t* input)
 
 void textelement_keydown(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
-    if (data->style.editable == 0) return;
-
-    char    key  = input->key;
-    font_t* font = input->font;
-
-    char* onchange = MGET(element->actions, "onchange");
-
-    if (input->key == kInputKeyTypeReturn)
-    {
-	char* onenter = MGET(element->actions, "onenter");
-	if (onenter != NULL) cmdqueue_add(input->cmdqueue, onenter, element, NULL);
-    }
-    else if (key == kInputKeyTypeBackspace)
-    {
-	data->cursor.index -= 1;
-	textelement_updatecursor(element);
-	textelement_realdelete(element, font, input->cmdqueue);
-	// if ( data->realdelcounter > 0 )
-	// data->realdelcounter = 1;
-	input->upload = 1;
-	if (onchange != NULL) cmdqueue_add(input->cmdqueue, onchange, element, NULL);
-	return;
-    }
-    else if (key == kInputKeyTypeLeftArrow)
-    {
-	data->cursor.index -= 1;
-	textelement_updatecursor(element);
-	return;
-    }
-    else if (key == kInputKeyTypeRightArrow)
-    {
-	data->cursor.index += 1;
-	textelement_updatecursor(element);
-	return;
-    }
-    else
-    {
-	textelement_addtext(element, input);
-	input->upload = 1;
-	if (onchange != NULL) cmdqueue_add(input->cmdqueue, onchange, element, NULL);
-    }
 }
 
 /* key press event */
@@ -429,47 +282,7 @@ void textelement_keypress(element_t* element, input_t* input)
 
 void textelement_touchdown(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
     element_input(element, input);
-
-    if (data->style.selectable == 1)
-    {
-	data->selection->startindex = data->selection->endindex = getindex_for_coordinate(element, input);
-	data->cursor.index                                      = getindex_for_coordinate(element, input);
-	textelement_updatetext(element, input->font, input->cmdqueue);
-    }
-
-    int index = getindex_for_coordinate(element, input);
-
-    if (data->dragged == 0 && data->metrics[index].selected == 1)
-    {
-	for (int sindex = 0; sindex < data->selections->length; sindex++)
-	{
-	    textselection_t* selection = data->selections->data[sindex];
-	    if (index >= selection->startindex && index <= selection->endindex)
-	    {
-		element->notouchunder = 1;
-		str_t* sstring        = str_new_substring(data->string, selection->startindex, selection->endindex);
-		char*  cstring        = str_new_cstring(sstring);
-		cmdqueue_add(input->cmdqueue, "app.openlink", element, cstring);
-		REL(cstring);
-		REL(sstring);
-	    }
-	}
-    }
-
-    if (element->focused == 0)
-    {
-	if (data->style.editable == 1)
-	{
-	    cmdqueue_add(input->cmdqueue, "ui.setfocused", element, NULL);
-	}
-    }
-    else
-    {
-	cmdqueue_add(input->cmdqueue, "view.showcopypaste", element, NULL);
-    }
 }
 
 /* touch down outside event */
@@ -490,43 +303,15 @@ void textelement_touchdownoutside(element_t* element, input_t* input)
 
 void textelement_touchdrag(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
     element_input(element, input);
-
-    data->dragged = 1;
-
-    if (data->style.selectable == 1)
-    {
-	element->notouchunder = 1;
-	uint32_t index        = getindex_for_coordinate(element, input);
-	if (data->selection->startindex != index && data->selection->endindex != index)
-	{
-	    if (data->selection->startindex > index) data->selection->startindex = index;
-	    else data->selection->endindex = index;
-	    vec_add_unique_data(data->selections, data->selection);
-	    textelement_updatetext(element, input->font, input->cmdqueue);
-	}
-    }
-
-    input->upload = 1;
 }
 
 /* touch up event */
 
 void textelement_touchup(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
     element_input(element, input);
     input->upload = 1;
-
-    if (data->style.selectable == 1)
-    {
-	if (data->selection->startindex == data->selection->endindex) element->notouchunder = 0;
-
-	VREM(data->selections, data->selection);
-    }
 
     // data->cursor.index = getindex_for_coordinate( element , input );
     // textelement_updatecursor( element );
@@ -537,99 +322,30 @@ void textelement_touchup(element_t* element, input_t* input)
 void textelement_resizeevent(element_t* element, input_t* input)
 {
     element_input(element, input);
-    textelement_resize(element, element->width, element->height, input->font, input->cmdqueue);
+    textelement_resize(element, element->width, element->height, input->cmdqueue);
 }
 
 /* focus event */
 
 void textelement_focus(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
     element->focused = 1;
-    textelement_updatetext(element, input->font, input->cmdqueue);
-    if (data->style.editable == 1)
-    {
-	// element_addsubelement( element , data->mask );
-	element_addsubelement(element, data->cursor.element);
-	// element_settranslation( data->mask, &data->maskpos );
-	element_settranslation(data->cursor.element, &data->cursor.curspos);
-	data->cursor.index = data->string->length;
-	textelement_updatecursor(element);
-	input->upload = 1;
-    }
-    if (data->style.editable == 1)
-    {
-	cmdqueue_add(input->cmdqueue, "app.showkeyboard", element, NULL);
-	cmdqueue_add(input->cmdqueue, "ui.addastimed", element, NULL);
-    }
+    textelement_updatetext(element, input->cmdqueue);
 }
 
 /* focus event */
 
 void textelement_unfocus(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
-    if (data->style.editable == 1)
-    {
-	// element_removesubelement( element , data->mask );
-	element_removesubelement(element, data->cursor.element);
-	cmdqueue_add(input->cmdqueue, "ui.removeastimed", element, NULL);
-	cmdqueue_add(input->cmdqueue, "view.hidecopypaste", element, NULL);
-	cmdqueue_add(input->cmdqueue, "app.hidekeyboard", element, NULL);
-	input->upload = 1;
-    }
     element->focused = 0;
-    textelement_updatetext(element, input->font, input->cmdqueue);
+    textelement_updatetext(element, input->cmdqueue);
 }
 
 /* timer event, update cursor */
 
 void textelement_timer(element_t* element, input_t* input)
 {
-    textdata_t* data = element->data;
-
     element_timer(element, input);
-
-    if (data->style.editable == 1)
-    {
-	if (element->focused == 1)
-	{
-	    data->cursor.blinkcounter++;
-
-	    data->cursor.actualpos.x += (data->cursor.targetpos.x - data->cursor.actualpos.x) / 4.0;
-	    data->cursor.actualpos.y += (data->cursor.targetpos.y - data->cursor.actualpos.y) / 4.0;
-
-	    /* shift mask if end of line */
-
-	    data->maskpos = data->cursor.actualpos;
-
-	    if (data->realdelcounter > 0)
-	    {
-		data->realdelcounter++;
-		if (data->realdelcounter == 20) textelement_realdelete(element, input->font, input->cmdqueue);
-		input->upload = 1;
-	    }
-
-	    if (data->cursor.blinkcounter < 20)
-	    {
-		data->cursor.curspos.x = data->cursor.actualpos.x;
-		data->cursor.curspos.y = data->cursor.actualpos.y;
-	    }
-	    else if (data->cursor.blinkcounter < 40)
-	    {
-		data->cursor.curspos.x = -element->finalx * 2;
-		data->cursor.curspos.y = -element->finaly * 2;
-	    }
-	    else
-	    {
-		data->cursor.blinkcounter = 0;
-	    }
-
-	    input->render = 1;
-	}
-    }
 }
 
 /* input event */

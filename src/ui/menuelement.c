@@ -2,6 +2,7 @@
 #define menuelement_h
 
 #include "element.c"
+#include "zc_text.c"
 
 #define kMenuItemTypeGap 0
 #define kMenuItemTypeLabel 1
@@ -25,7 +26,7 @@ typedef struct _menudata_t
 
 } menudata_t;
 
-element_t* menuelement_alloc(char* name, float x, float y, float width, float height, float scale, textstyle_t text, font_t* font, uint32_t count, menuitem_t* items);
+element_t* menuelement_alloc(char* name, float x, float y, float width, float height, float scale, textstyle_t text, uint32_t count, menuitem_t* items);
 void       menuelement_input(element_t* element, input_t* input);
 
 #endif
@@ -48,7 +49,6 @@ element_t* menuelement_alloc(
     float       height,
     float       scale,
     textstyle_t text,
-    font_t*     font,
     uint32_t    count,
     menuitem_t* items)
 {
@@ -75,7 +75,7 @@ element_t* menuelement_alloc(
 	    {
 		textstyle_t mystyle = text;
 		mystyle.backcolor   = item.color;
-		mystyle.textsize    = 120.0;
+		mystyle.size        = 120.0;
 
 		str_t* label = str_frombytes(item.label);
 
@@ -87,12 +87,11 @@ element_t* menuelement_alloc(
 		    140.0,
 		    label,
 		    NULL,
-		    font,
 		    mystyle);
 
 		REL(label);
 
-		mystyle.textsize  = 20.0;
+		mystyle.size      = 20.0;
 		mystyle.backcolor = 0;
 
 		label = str_frombytes("by Milan Toth");
@@ -105,7 +104,6 @@ element_t* menuelement_alloc(
 		    20.0,
 		    label,
 		    NULL,
-		    font,
 		    mystyle);
 
 		REL(label);
@@ -121,7 +119,7 @@ element_t* menuelement_alloc(
 	    case kMenuItemTypeLabel:
 	    {
 		str_t* label = str_frombytes(item.label);
-		itemelement  = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
+		itemelement  = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, text);
 		REL(label);
 
 		break;
@@ -131,7 +129,7 @@ element_t* menuelement_alloc(
 		textstyle_t mystyle = text;
 		mystyle.backcolor   = item.color;
 		str_t* label        = str_frombytes(item.label);
-		itemelement         = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, mystyle);
+		itemelement         = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, mystyle);
 		REL(label);
 
 		element_setaction(itemelement, "ontouchup", item.action);
@@ -141,7 +139,7 @@ element_t* menuelement_alloc(
 	    case kMenuItemTypeToggle:
 	    {
 		str_t* label = str_frombytes(item.label);
-		itemelement  = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
+		itemelement  = textelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, label, NULL, text);
 		REL(label);
 
 		break;
@@ -151,7 +149,7 @@ element_t* menuelement_alloc(
 		text.backcolor         = 0;
 		str_t* label           = str_frombytes(item.label);
 		itemelement            = sliderelement_alloc("menuitem", 0 * scale, position, 300.0 * scale, 40.0 * scale, 0x00FF0088, item.color, 1, 1);
-		element_t* textelement = textelement_alloc("textitem", 0, 0, 300.0 * scale, 40.0 * scale, label, NULL, font, text);
+		element_t* textelement = textelement_alloc("textitem", 0, 0, 300.0 * scale, 40.0 * scale, label, NULL, text);
 
 		element_addsubelement(itemelement, textelement);
 

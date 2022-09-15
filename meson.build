@@ -14,8 +14,9 @@ glew = cc.find_library('GLEW',static:false)
 glu = cc.find_library('GLU',static:false)
 sdl = cc.find_library('SDL2',static:false)
 sdlmixer = cc.find_library('SDL2_mixer',static:false)
+freetype = cc.find_library('freetype',static:false)
 
-brawl_dependencies = [math,gl,glew,sdl,sdlmixer]
+brawl_dependencies = [math,gl,glew,sdl,sdlmixer,freetype]
 
 brawl_version = '"@0@"'.format(meson.project_version())
 pkg_datadir = join_paths(get_option('prefix'), get_option('datadir')) / 'brawl'
@@ -32,6 +33,7 @@ brawl_inc = include_directories(
 	'/usr/include',
 	'/usr/include/GL',
 	'/usr/include/SDL2',
+	'/usr/include/freetype2',
 	'src/brawl',
 	'src/brawl/actor',
 	'src/brawl/gl',
@@ -48,7 +50,6 @@ com_sources = ['src/brawl/audio.c',
 	       'src/brawl/cmd.c',
 	       'src/brawl/defaults.c',
 	       'src/brawl/file.c',
-	       'src/brawl/font.c',
 	       'src/brawl/image.c',
 	       'src/brawl/main.c',
 	       'src/brawl/pivot.c',
@@ -94,7 +95,6 @@ com_sources = ['src/brawl/audio.c',
 	       'src/ui/ui.c',
 	       'src/ui/uirenderer.c',
 	       'src/ui/vectoranimator.c',
-	       'src/ui/text.c',
 
 	       'src/zc_core/zc_bm_rgba.c',
 	       'src/zc_core/zc_cstring.c',
@@ -107,6 +107,7 @@ com_sources = ['src/brawl/audio.c',
 	       'src/zc_core/zc_path.c',
 	       'src/zc_core/zc_channel.c',
 	       'src/zc_core/zc_bm_rgba.c',
+	       'src/zc_core/zc_wrapper.c',
 
 	       'src/zc_math/zc_vec2.c',
 	       'src/zc_math/zc_util2.c',
@@ -116,10 +117,10 @@ com_sources = ['src/brawl/audio.c',
 	       'src/zc_math/zc_mat4.c',
 
 	       'src/zc_gfx/zc_draw.c',
+	       'src/zc_gfx/zc_text.c',
 
 	       'src/ext/nanosvg.h',
-	       'src/ext/stb_image.h',
-	       'src/ext/stb_truetype.h']
+	       'src/ext/stb_image.h']
 	       
 install_data('res/Impact.ttf', install_dir : pkg_datadir )
 install_data('res/argh0.wav', install_dir : pkg_datadir )

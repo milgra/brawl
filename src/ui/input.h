@@ -2,7 +2,6 @@
 #define KineticUI_input_h
 
 #include "cmd.c"
-#include "font.c"
 #include "zc_string.c"
 
 #define kInputTypeTimer 0
@@ -87,7 +86,6 @@ struct _input_t
     char render;
 
     char*       respath;
-    font_t*     font;
     cmdqueue_t* cmdqueue;
 
     /* cleanup? */

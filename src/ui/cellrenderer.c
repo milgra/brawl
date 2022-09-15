@@ -16,7 +16,7 @@ struct _cellrenderer_t
     ch_t*   elements_to_render;
 };
 
-cellrenderer_t* cellrenderer_alloc(font_t* font, char* respath);
+cellrenderer_t* cellrenderer_alloc(char* respath);
 
 void cellrenderer_queue(cellrenderer_t* renderer, element_t* element);
 
@@ -31,13 +31,11 @@ void cellrenderer_timerloop(cellrenderer_t* renderer);
 
 /* alloc cellrenderer */
 
-cellrenderer_t* cellrenderer_alloc(font_t* font, char* respath)
+cellrenderer_t* cellrenderer_alloc(char* respath)
 {
     cellrenderer_t* result     = CAL(sizeof(cellrenderer_t), cellrenderer_dealloc, NULL);
     result->alive              = 1;
     result->elements_to_render = ch_new(100);
-
-    result->input.font = RET(font);
 
     result->input.type    = kInputTypeRender;
     result->input.respath = respath;
@@ -56,7 +54,6 @@ void cellrenderer_dealloc(void* pointer)
 {
     cellrenderer_t* renderer = pointer;
     REL(renderer->elements_to_render);
-    REL(renderer->input.font);
 }
 
 /* timer thread */

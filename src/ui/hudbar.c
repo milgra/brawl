@@ -2,21 +2,20 @@
 #define hudbar_h
 
 #include "element.c"
-#include "font.c"
 
 element_t* hudbarelement_alloc(
-    char*   name,
-    float   x,
-    float   y,
-    float   width,
-    float   height,
-    float   scale,
-    font_t* font);
+    char* name,
+    float x,
+    float y,
+    float width,
+    float height,
+    float scale);
 
 #endif /* hudbar_h */
 
 #if __INCLUDE_LEVEL__ == 0
 
+#include "defaults.c"
 #include "sliderelement.c"
 #include "str_util.c"
 #include "textelement.c"
@@ -24,15 +23,13 @@ element_t* hudbarelement_alloc(
 #include "zc_memory.c"
 
 element_t* hudbarelement_alloc(
-    char*   name,
-    float   x,
-    float   y,
-    float   width,
-    float   height,
-    float   scale,
-    font_t* font)
+    char* name,
+    float x,
+    float y,
+    float width,
+    float height,
+    float scale)
 {
-
     element_t* baseel;
     element_t* leftel;
     element_t* rghtel;
@@ -43,25 +40,18 @@ element_t* hudbarelement_alloc(
 
     rghtel = sliderelement_alloc("bar", width / 2.0, 0, width / 2.0, height, 0x00AA00FF, 0x000000FF, 0, 0);
 
-    textstyle_t buttontexts =
-	{
-	    .align      = 1,
-	    .editable   = 0,
-	    .selectable = 0,
-	    .multiline  = 0,
-	    .autosize   = 0,
-	    .uppercase  = 0,
+    textstyle_t buttontexts = {0};
 
-	    .textsize   = 30.0 * scale,
-	    .marginsize = 5.0 * scale,
-	    .cursorsize = 0.0,
+    buttontexts.font      = defaults.fontpath; // REL 0
+    buttontexts.size      = 30.0 * defaults.scale;
+    buttontexts.align     = TA_CENTER;
+    buttontexts.margin    = (int) 5.0 * defaults.scale;
+    buttontexts.textcolor = 0xFFFFFFFF;
+    buttontexts.backcolor = 0xFFFFFF55;
 
-	    .textcolor = 0xFFFFFFFF,
-	    .backcolor = 0xFFFFFF55};
+    element_t* lefttext = textelement_alloc("lefttext", 0, 0, width / 2.0, height, str_frombytes("Health"), NULL, buttontexts);
 
-    element_t* lefttext = textelement_alloc("lefttext", 0, 0, width / 2.0, height, str_frombytes("Health"), NULL, font, buttontexts);
-
-    element_t* rghttext = textelement_alloc("righttext", 0, 0, width / 2.0, height, str_frombytes("Power"), NULL, font, buttontexts);
+    element_t* rghttext = textelement_alloc("righttext", 0, 0, width / 2.0, height, str_frombytes("Power"), NULL, buttontexts);
 
     element_addsubelement(baseel, leftel);
 
