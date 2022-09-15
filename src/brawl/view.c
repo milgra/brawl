@@ -72,26 +72,10 @@ void view_init()
 
     text_init();
 
-    /* textstyle_t textstyle = */
-    /* 	{ */
-    /* 	    .align      = 1, */
-    /* 	    .editable   = 0, */
-    /* 	    .selectable = 0, */
-    /* 	    .multiline  = 0, */
-    /* 	    .autosize   = 0, */
-    /* 	    .uppercase  = 0, */
-
-    /* 	    .textsize   = 30.0 * defaults.scale, */
-    /* 	    .marginsize = 5.0 * defaults.scale, */
-    /* 	    .cursorsize = 0.0, */
-
-    /* 	    .textcolor = 0xFFFFFFFF, */
-    /* 	    .backcolor = 0xFFFFFF55}; */
-
     textstyle_t textstyle = {0};
 
     textstyle.font   = defaults.fontpath; // REL 0
-    textstyle.size   = 30.0 * defaults.scale;
+    textstyle.size   = 25.0 * defaults.scale;
     textstyle.align  = TA_CENTER;
     textstyle.margin = (int) 5.0 * defaults.scale;
 
@@ -415,7 +399,6 @@ void view_init_menu(textstyle_t textstyle)
 	defaults.height,
 	defaults.scale,
 	textstyle,
-
 	7,
 	mainitems);
 

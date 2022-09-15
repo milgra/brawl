@@ -19,22 +19,6 @@ element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale);
 
 element_t* actor_hud_element_alloc(char* name, uint32_t color, float scale)
 {
-    /* textstyle_t buttontexts = */
-    /* 	{ */
-    /* 	    .align      = 1, */
-    /* 	    .editable   = 0, */
-    /* 	    .selectable = 0, */
-    /* 	    .multiline  = 1, */
-    /* 	    .autosize   = 0, */
-    /* 	    .uppercase  = 0, */
-
-    /* 	    .textsize   = 20.0 * scale, */
-    /* 	    .marginsize = 0.0 * scale, */
-    /* 	    .cursorsize = 0.0, */
-
-    /* 	    .textcolor = 0xFFFFFFFF, */
-    /* 	    .backcolor = 0}; */
-
     textstyle_t buttontexts = {0};
 
     buttontexts.font   = defaults.fontpath; // REL 0

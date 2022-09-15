@@ -43,7 +43,7 @@ element_t* hudbarelement_alloc(
     textstyle_t buttontexts = {0};
 
     buttontexts.font      = defaults.fontpath; // REL 0
-    buttontexts.size      = 30.0 * defaults.scale;
+    buttontexts.size      = 25.0 * defaults.scale;
     buttontexts.align     = TA_CENTER;
     buttontexts.margin    = (int) 5.0 * defaults.scale;
     buttontexts.textcolor = 0xFFFFFFFF;

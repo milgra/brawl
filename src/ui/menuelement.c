@@ -75,7 +75,7 @@ element_t* menuelement_alloc(
 	    {
 		textstyle_t mystyle = text;
 		mystyle.backcolor   = item.color;
-		mystyle.size        = 120.0;
+		mystyle.size        = 90.0;
 
 		str_t* label = str_frombytes(item.label);
 
