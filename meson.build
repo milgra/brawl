@@ -8,13 +8,13 @@ project(
 
 cc = meson.get_compiler('c')
 
-math = cc.find_library('m',static:false)
-gl = cc.find_library('GL',static:false)
-glew = cc.find_library('GLEW',static:false)
-glu = cc.find_library('GLU',static:false)
-sdl = cc.find_library('SDL2',static:false)
-sdlmixer = cc.find_library('SDL2_mixer',static:false)
-freetype = cc.find_library('freetype',static:false)
+math = cc.find_library('m')
+gl = cc.find_library('GL')
+glew = cc.find_library('GLEW')
+glu = cc.find_library('GLU')
+sdl = cc.find_library('SDL2')
+sdlmixer = cc.find_library('SDL2_mixer')
+freetype = cc.find_library('freetype')
 
 brawl_dependencies = [math,gl,glew,sdl,sdlmixer,freetype]
 
