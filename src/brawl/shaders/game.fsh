@@ -1,3 +1,5 @@
+"#version 100\n"
+"precision highp float;\n"
 "\
 varying vec4 colorv;\
 varying vec4 positionv;\

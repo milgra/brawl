@@ -162,13 +162,17 @@ void text_font_load(char* path)
 	    MPUTR(txt_ft.libs, path, libwrp);
 	    MPUTR(txt_ft.fonts, path, facewrp);
 
-	    if (error != 0) printf("FT Set Char Size error\n");
+	    if (error != 0)
+		printf("FT Set Char Size error\n");
 
 	    // printf("Font loaded %s txt_ft.fonts in file %li\n", path, face->num_faces);
 	}
 	else
 	{
-	    if (error == FT_Err_Unknown_File_Format) { printf("FT Unknown font file format\n"); }
+	    if (error == FT_Err_Unknown_File_Format)
+	    {
+		printf("FT Unknown font file format\n");
+	    }
 	    else if (error)
 	    {
 		printf("FT New Face error %s\n", path);
@@ -190,7 +194,8 @@ void text_break_glyphs(glyph_t* glyphs, int count, textstyle_t style, int wth, i
     {
 	text_font_load(style.font);
 	facewrp = MGET(txt_ft.fonts, style.font);
-	if (!facewrp) return;
+	if (!facewrp)
+	    return;
     }
 
     FT_Face font = facewrp->data;
@@ -215,7 +220,8 @@ void text_break_glyphs(glyph_t* glyphs, int count, textstyle_t style, int wth, i
     fonth = asc - desc;
     lineh = fonth + lgap;
 
-    if (style.line_height != 0) lineh = style.line_height;
+    if (style.line_height != 0)
+	lineh = style.line_height;
 
     // printf("asc %i desc %i lgap %i fonth %i lineh %i\n", asc, desc, lgap, fonth, lineh);
 
@@ -239,7 +245,8 @@ void text_break_glyphs(glyph_t* glyphs, int count, textstyle_t style, int wth, i
 	FT_UInt nglyph_index = FT_Get_Char_Index(font, ncp);
 
 	error = FT_Load_Glyph(font, glyph_index, FT_LOAD_DEFAULT);
-	if (error) printf("FT LOAD CHAR ERROR\n");
+	if (error)
+	    printf("FT LOAD CHAR ERROR\n");
 
 	/* printf("GLYPH: %c loaded, width %li height %li horiBearingX %li horiBearingY %li horiAdvance %li vertBearingX %li vertBearingY %li vertAdvance %li\n", */
 	/*        glyph.cp, */
@@ -263,7 +270,12 @@ void text_break_glyphs(glyph_t* glyphs, int count, textstyle_t style, int wth, i
 
 	FT_BBox bbox;
 	FT_Glyph_Get_CBox(glph, FT_GLYPH_BBOX_SUBPIXELS, &bbox); // FT_GLYPH_BBOX_GRIDFIT
-	FT_Done_Glyph(glph);
+
+	int error = FT_Render_Glyph(font->glyph, FT_RENDER_MODE_NORMAL);
+	if (error)
+	{
+	    printf("FT_Render_Glyph error\n");
+	}
 
 	advx = font->glyph->advance.x >> 6;
 	lsb  = font->glyph->metrics.horiBearingX >> 6;
@@ -287,7 +299,7 @@ void text_break_glyphs(glyph_t* glyphs, int count, textstyle_t style, int wth, i
 
 	/* int size = w * h; */
 	/* printf("w %i h %i size %i\n", w, h, size); */
-	// printf("%c bitmap left %i bitmap top %i\n", glyph.cp, font->glyph->bitmap_left, font->glyph->bitmap_top);
+	/* printf("%c bitmap left %i bitmap top %i\n", glyph.cp, font->glyph->bitmap_left, font->glyph->bitmap_top); */
 
 	glyph.x       = xpos + font->glyph->bitmap_left;
 	glyph.y       = ypos - font->glyph->bitmap_top;
@@ -300,13 +312,16 @@ void text_break_glyphs(glyph_t* glyphs, int count, textstyle_t style, int wth, i
 	glyph.desc    = (float) desc;
 	glyph.cp      = cp;
 
+	FT_Done_Glyph(glph);
+
 	// printf("glyph : %c x : %i y : %i\n", glyph.cp, glyph.x, glyph.y);
 
 	// advance x axis
 	xpos += advx;
 
 	// in case of space/invisible, set width based on pos
-	if (w == 0) glyph.w = xpos - glyph.x;
+	if (w == 0)
+	    glyph.w = xpos - glyph.x;
 
 	FT_Vector kerning;
 	error = FT_Get_Kerning(
@@ -319,11 +334,14 @@ void text_break_glyphs(glyph_t* glyphs, int count, textstyle_t style, int wth, i
 	// printf("kerning x %li y %li\n", kerning.x, kerning.y);
 
 	// advance with kerning
-	if (ncp > 0) xpos += kerning.x >> 6;
+	if (ncp > 0)
+	    xpos += kerning.x >> 6;
 
 	// line break
-	if (cp == '\n' || cp == '\r') glyph.w = 0; // they should be invisible altough they get an empty unicode font face
-	if (cp == ' ') spc_a = index;
+	if (cp == '\n' || cp == '\r')
+	    glyph.w = 0; // they should be invisible altough they get an empty unicode font face
+	if (cp == ' ')
+	    spc_a = index;
 
 	// store glyph
 	glyphs[index] = glyph;

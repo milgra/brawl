@@ -15,7 +15,10 @@ void audio_free(void);
 #include "defaults.c"
 #include "zc_cstring.c"
 #include "zc_memory.c"
-#include <linux/limits.h>
+
+#ifdef __linux__
+    #include <linux/limits.h>
+#endif
 
 Mix_Chunk* sounds[9];
 Mix_Music* music;

@@ -25,7 +25,8 @@ bm_rgba_t* image_bmp_from_png(char* path)
     {
 	FILE* file = fopen(path, "r");
 
-	if (file == NULL) printf("ERROR file does not exists %s", path);
+	if (file == NULL)
+	    printf("ERROR file does not exists %s", path);
 	else
 	{
 	    fclose(file);

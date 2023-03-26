@@ -3,7 +3,9 @@
 #ifndef _scene_header
 #define _scene_header
 
-#include <linux/limits.h>
+#ifdef __linux__
+    #include <linux/limits.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -78,7 +78,9 @@ void uirenderer_draw(uirenderer_t* renderer);
 #if __INCLUDE_LEVEL__ == 0
 
 const char* vertex_point_source =
-#if defined(IOS) || defined(ANDROID) || defined(ASMJS)
+#if defined(IOS) || defined(ANDROID) || defined(EMSCRIPTEN)
+    "#version 100\n"
+    "precision highp float;\n"
     "attribute vec4 position;\n"
     "attribute vec2 texcoord;\n"
     "varying highp vec2 texcoordv;\n"
@@ -89,6 +91,8 @@ const char* vertex_point_source =
     "texcoordv = texcoord;"
     "}\n";
 #else
+    "#version 100\n"
+    "precision highp float;\n"
     "attribute vec4 position;\n"
     "attribute vec2 texcoord;\n"
     "varying vec2 texcoordv;\n"
@@ -101,7 +105,9 @@ const char* vertex_point_source =
 #endif
 
 const char* fragment_point_source =
-#if defined(IOS) || defined(ASMJS)
+#if defined(IOS) || defined(EMSCRIPTEN)
+    "#version 100\n"
+    "precision highp float;\n"
     "varying highp vec2 texcoordv;\n"
     "uniform sampler2D texture_main;\n"
     "void main( )\n"
@@ -126,6 +132,8 @@ const char* fragment_point_source =
     "   }\n"
     "}\n";
 #else
+	"#version 100\n"
+	"precision highp float;\n"
 	"varying vec2 texcoordv;\n"
 	"uniform int texindex;\n"
 	"uniform sampler2D texture_video;\n"
@@ -158,7 +166,7 @@ uirenderer_t* uirenderer_alloc(float width, float height)
     gettimeofday(&uirenderer->texreset, NULL);
 
     glUseProgram(uirenderer->shader);
-    glEnable(GL_TEXTURE_2D);
+    //glEnable(GL_TEXTURE_2D);
     glClearColor(0.5, 0.5, 0.5, 1.0);
     glGenBuffers(1, &uirenderer->vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, uirenderer->vertexbuffer);
@@ -171,7 +179,8 @@ uirenderer_t* uirenderer_alloc(float width, float height)
     int max_size;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
     /* printf("Max texture size is : %i\n", max_size); */
-    if (max_size > 4096) max_size = 4096;
+    if (max_size > 4096)
+	max_size = 4096;
 
     uirenderer->textures[0].maxsize = max_size;
     uirenderer->textures[1].maxsize = max_size;

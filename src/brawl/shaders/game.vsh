@@ -1,3 +1,5 @@
+"#version 100\n"
+"precision highp float;\n"
 "\
 attribute vec4 position;\
 attribute vec4 color;\

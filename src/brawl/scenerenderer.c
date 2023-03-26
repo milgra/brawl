@@ -187,17 +187,14 @@ void scenerenderer_render(GLuint layer)
 
     if (mode == GL_POINTS)
     {
-
 	scenerenderer_render_points(layer);
     }
     else if (mode == GL_LINES)
     {
-
 	scenerenderer_render_lines(layer);
     }
     else if (mode == GL_TRIANGLES)
     {
-
 	scenerenderer_render_triangles(layer);
     }
 }

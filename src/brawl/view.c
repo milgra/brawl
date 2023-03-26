@@ -48,7 +48,9 @@ void view_free(void);
 #include "sliderelement.c"
 #include "zc_cstring.c"
 #include "zc_text.c"
-#include <linux/limits.h>
+#ifdef __linux__
+    #include <linux/limits.h>
+#endif
 
 view_t view;
 
@@ -865,8 +867,10 @@ void view_timer()
 		element_t* bubble = group->bubble;
 
 		float delta = 0.0;
-		if (actor->facing < 0) delta = -bubble->width - 30.0 * defaults.scale;
-		else delta = 30.0 * defaults.scale;
+		if (actor->facing < 0)
+		    delta = -bubble->width - 30.0 * defaults.scale;
+		else
+		    delta = 30.0 * defaults.scale;
 		element_setposition(bubble, point.x + delta, defaults.height - point.y);
 
 		if (group->removetime == 0)

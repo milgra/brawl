@@ -5,8 +5,11 @@
 
 #include "zc_cstring.c"
 #include "zc_vec2.c"
-#include <linux/limits.h>
 #include <stdlib.h>
+
+#ifdef __linux__
+    #include <linux/limits.h>
+#endif
 
 typedef struct _defaults_t
 {
