@@ -51,6 +51,8 @@ find src -type f -name "*.c" > files.txt
 
 ### TODO
 
+- update physics from cljs-brawl
+- imageelement throw error is resource directory not exists braw/cortex
 - blood not visible
 - re-write physics and collosion based on cljs-brawl  
 - add snow and other new stuff from cljs-brawl  
