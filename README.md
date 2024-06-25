@@ -16,6 +16,12 @@ FEATURES
 
 The code is also suitable for learning purposes.
 
+## Try it! ##
+
+[https://github.com/milgra/brawl/releases/download/0.8/brawl.app.tar.gz]
+
+Extract the archive and call brawl.app/brawl. It is a standalone application bundle running on all distributions.
+
 ### Files
 
 audio.c - audio handling
