@@ -22,6 +22,16 @@ The code is also suitable for learning purposes.
 
 Extract the archive and call brawl.app/brawl. It is a standalone application bundle running on all distributions.
 
+## Build ##
+
+```
+git clone https://github.com/milgra/brawl.git
+cd brawl
+meson build --buildtype=release
+ninja -C build
+sudo ninja -C build install
+```
+
 ### Files
 
 audio.c - audio handling
